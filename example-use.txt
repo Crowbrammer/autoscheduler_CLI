@@ -1,0 +1,23 @@
+<< a current
+>> Show the currenct schedule_template and actions
+
+ - [] 
+
+a set-outcome
+>> Sets a new schedule template and its name
+
+a current schedule
+>> Show the current schedule
+
+a schedule
+>> Schedule the current schedule template
+
+/**
+ * Current flow:
+ * 
+ *  - Set the current template X
+ *  - Add actions to it X
+ *  - Schedule it X (Store the schedule);
+ *  - Refer to the schedule whenever
+ *  - The current template should be locked
+ */

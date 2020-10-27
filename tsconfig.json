@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ESNext"
+    },
+    "files": [
+        "./index.ts",
+        "./migrations.ts",
+        "./Orderer.ts",
+        "./Autoscheduler.ts",
+        "./Schedule.ts"
+    ]
+
+}
