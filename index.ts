@@ -18,10 +18,10 @@ async function main() {
             console.log(greeting);
             if (!process.argv[3]) {
                 await autoscheduler.create.template('');
-                console.log('Unnamed schedule template created and set as current.')
+                console.log('\nUnnamed schedule template created and set as current.')
             } else {
                 await autoscheduler.create.template(process.argv[3]);
-                console.log(`Schedule template named '${process.argv[3]}' created and set as the current template.`)
+                console.log(`\nSchedule template named '${process.argv[3]}' created and set as the current template.`)
             }
             console.log(farewell);
             break;
@@ -74,6 +74,8 @@ async function main() {
             console.log('------')
             console.log(farewell);
             break;
+        // Make it show the current schedule...
+        // Deploy the schedule to the site...
         default:
             break;
     }

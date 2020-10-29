@@ -19,3 +19,5 @@ event.base_action_id === action.id
 schedule_event order === template_action order
 
 Schedule <-> schedule template 
+
+Retrieve schedules

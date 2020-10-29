@@ -96,7 +96,7 @@ async function refresh(pQuery, loud) {
 }
 async function main(isTest, loud) {
     let pQuery = new PQuery({ user: process.env.DB_USER, password: process.env.DB_PASSWORD, host: 'localhost' });
-    await pQuery.useDb('autoscheduler');
+    await pQuery.useDb(process.env.DATABASE);
     await refresh(pQuery, loud);
     pQuery.connection.end();
 }

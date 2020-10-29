@@ -487,6 +487,10 @@ describe('Autoscheduler', async function() {
     xit('Shows the events related to the schedule', async function () {
         
     })
+    xit('Updates the schedule (template) with a new time');
+    xit('Says if it was missed or not');
+    xit('Lets me add a reason if it was missed');
+    xit('Shows my past X schedules');
     describe('Rescheduling', async function() {
         let scheduleTemplateId;
         let actions;
