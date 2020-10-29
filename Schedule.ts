@@ -1,5 +1,6 @@
 require('dotenv').config({path: __dirname + '/.env'});
 type Task = {name: string, duration: number} 
+type Id = number | string;
 const PQuery = require('prettyquery');
 const pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
 
@@ -11,10 +12,12 @@ export default class Schedule {
     startTime;
     events = [];
     start: number;
+    templateId: Id;
     constructor(tasks: Task[], templateId: number, name: string, start = Date.now()) {
       if (!templateId) {
         throw new Error('Need the id of the template this came from');
       }
+      this.templateId = templateId;
       this.tasks = tasks;
       this.startTime = start;
       this.buildEvents();
@@ -73,7 +76,7 @@ export default class Schedule {
     
     async save() {
       // Add all the events
-      const scheduleId = (await pQuery.query(`INSERT INTO schedules (name) VALUES ('${this.name}');`)).insertId;
+      const scheduleId = (await pQuery.query(`INSERT INTO schedules (name, based_on_template_id) VALUES ('${this.name}', ${this.templateId});`)).insertId;
       for (let i = 0; i < this.events.length; i++) {
         const event = this.events[i];
         const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;

@@ -45,7 +45,7 @@ async function main() {
                     break;
                 case 'action':
                     const actionName = process.argv[4]
-                    if (/\D+/.test(process.argv[5]) {
+                    if (/\D+/.test(process.argv[5])) {
                         console.log('Must put a number-only duration as the fourth argument');
                         process.exit(0);
                     } 

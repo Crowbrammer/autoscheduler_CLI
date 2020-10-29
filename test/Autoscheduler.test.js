@@ -70,13 +70,8 @@ describe('Autoscheduler', async function() {
             expect(scheduledEvents[2].base_action_id).to.equal(lastElevenActions[2].id);
         })
 
-        it('Links schedule templates to the "current" decision', async function() {
-            const decisionScheduleTemplate = await pQuery.query(`SELECT * FROM decision_schedule_templates WHERE decision_id = ${currentDecisionId} AND schedule_template_id = ${scheduleTemplateId}`);
-            expect(decisionScheduleTemplate.length).to.equal(1);
-            expect(schedule.template.decision.id).to.equal(currentDecisionId);
-        });
-        xit('Links schedules to both the template and the decision', async function () {
-            expect(schedule.template.id).to.equal(currentTemplateId);
+        it('Links schedules to both the template and the decision', async function () {
+            expect(schedule.template.id).to.equal(scheduleTemplateId);
             expect(schedule.decision.id).to.equal(currentDecisionId);
         })
 
@@ -151,6 +146,21 @@ describe('Autoscheduler', async function() {
         expect(obstacleId).to.equal(deletedObstacleId);
     })
 
+    it('Creates a schedule template', async function () {
+        const templateId = await autoscheduler.create.template('Lol');
+        expect(templateId).to.not.be.undefined;
+        expect((await pQuery.select('id', 'schedule_templates','id', templateId)).length).to.equal(1);
+        await pQuery.query('DELETE FROM schedule_templates WHERE id = ' + templateId);
+    })
+    
+    it('Deletes a schedule template', async function () {
+        const templateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Lol\', true);')).insertId;
+        expect(templateId).to.not.be.undefined;
+        expect((await pQuery.select('id', 'schedule_templates','id', templateId)).length).to.equal(1);
+        const deletedTemplateId = await autoscheduler.delete.template(templateId);
+        expect((await pQuery.select('id', 'schedule_templates','id', templateId)).length).to.equal(0);
+        expect(templateId).to.equal(deletedTemplateId);
+    })
 
     it('Shows the currently selected outcome', async function () {
         // Make sure there are no currently selected purposes
@@ -248,6 +258,28 @@ describe('Autoscheduler', async function() {
 
         // Tear down
         await pQuery.query(`DELETE FROM schedule_templates WHERE id = ${scheduleTemplateId}`);
+    });
+
+    it('Shows the currently selected decision', async function () {
+
+        // Make sure there are no currently selected obstacles
+        await pQuery.query('UPDATE decisions SET is_current = false;');
+        expect((await pQuery.query('SELECT * FROM decisions WHERE is_current = true;')).length).to.equal(0);
+        // Set something I make as the current
+        const decisionId = (await pQuery.query('INSERT INTO decisions (name, is_current) VALUES (\'Lol\', true);')).insertId;
+        const currentDecisions = await pQuery.select('*', 'decisions','id', decisionId);
+        expect(currentDecisions.length).to.equal(1);
+        expect(currentDecisions[0].id).to.equal(decisionId);
+        expect(currentDecisions[0].name).to.equal('Lol');
+        expect(currentDecisions[0].is_current).to.equal(1);
+        
+        const currentDecision = await autoscheduler.retrieve.current.decision();
+        expect(currentDecision.id).to.equal(decisionId);
+        expect(currentDecision.name).to.equal(currentDecisions[0].name);
+        expect(currentDecision.is_current).to.equal(1);
+
+        // Tear down
+        await pQuery.query(`DELETE FROM decisions WHERE id = ${decisionId}`);
     });
 
     it('Shows the past ten outcomes under the current purpose', async function() {
@@ -361,63 +393,115 @@ describe('Autoscheduler', async function() {
         }
     });
 
-    xit('Reschedules the rest of the tasks starting before a selected task', async function () {
-        /// Setup
-
-        //  Schedule template
-        await pQuery.query('UPDATE schedule_templates SET is_current = false');
-        const scheduleTemplateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Lol\', true)')).insertId;
-        //  Actions
+    it('Shows the actions related to the current schedule template', async function() {
+        // Set up
         const actions = [];
         for (let i = 0; i < 11; i++) {
-            actions.push([`Decision #${i}`, i]);
+            actions.push([`Action #${i}`, i]);
         }
+        // Have eleven actions
         await pQuery.insert('actions', ['name', 'duration'], actions);
         const lastElevenActions = await pQuery.query('SELECT id FROM actions ORDER BY id DESC LIMIT 11');
         expect(lastElevenActions.length).to.equal(11);
-        //  Link actions to the schedule template
+
+        // Connect 'em to a schedule_template
+        await pQuery.query('UPDATE schedule_templates SET is_current = false');
+        const scheduleTemplateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Haha\', true);')).insertId;
         lastElevenActions.forEach(async action => {
             await pQuery.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${scheduleTemplateId}, ${action.id});`);
         });
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId};`)).length).to.equal(11);
-        //  Schedule from the template 
+        const scheduleTemplateActions = await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId};`);
+        expect(scheduleTemplateActions.length).to.equal(11);
+        
+        // Test
 
-        //  A schedule is a set of events from an ordered set of actions referenced to by a template
-        //  An event is based on an action: 
-        //    Its summary is the action name
-        //    Its duration helps determines its start
-        //    Its base_id equals the action it's based on's id
-        //  These events are ordered at the link
-
-        // Its helps duration start its determine. 
-        // We start should language a new pattern. 
-        // We change should syntax our.        
-
-
-        //  Schedule linked to the schedule template 
-
-        /// Test
-        // Reschedule function
-        // E New template from this set as the current
-        // E New schedule from the template
-        // E Should reference the same actions (not create new ones)
-        // 
-
-        /// Teardown
-        //  Remove: 
-        //  schedule links for the schedule template
-        //  schedule
-        //  actions links for the schedule template
+        const relatedActions = await autoscheduler.retrieve.related.actions();
+        expect(relatedActions.length).to.equal(11);
+        expect(relatedActions[3].id).to.equal(scheduleTemplateActions[3].action_id);
+        
+        // Tear down
         await pQuery.query(`DELETE FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId}`);
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId};`)).length).to.equal(0);
-        //  actions
+        await pQuery.query(`DELETE FROM schedule_templates WHERE id = ${scheduleTemplateId}`);
+        expect((await pQuery.select('*', 'schedule_template_actions', 'schedule_template_id', scheduleTemplateId)).length).to.equal(0);
         for (let i = 0; i < lastElevenActions.length; i++) {
             const action = lastElevenActions[i];
             await pQuery.query(`DELETE FROM actions WHERE id = ${action.id}`);
             expect((await pQuery.select('*', 'actions', 'id', action.id)).length).to.equal(0);
         }
-        //  schedule template
-        await pQuery.query(`DELETE FROM schedule_templates WHERE id = ${scheduleTemplateId}`);
+    });
+
+    describe('Rescheduling', async function() {
+        let scheduleTemplateId;
+        let actions;
+        let lastElevenActions;
+        let schedule;
+        before(async function() {
+            /// Setup
+
+            //  Schedule template
+            await pQuery.query('UPDATE schedule_templates SET is_current = false');
+            scheduleTemplateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Lol\', true)')).insertId;
+
+            //  Actions
+            actions = [];
+            for (let i = 0; i < 11; i++) {
+                actions.push([`Decision #${i}`, i]);
+            }
+            await pQuery.insert('actions', ['name', 'duration'], actions);
+            lastElevenActions = await pQuery.query('SELECT id FROM actions ORDER BY id DESC LIMIT 11');
+            expect(lastElevenActions.length).to.equal(11);
+            
+            //  Link actions to the schedule template
+            let i = 0;
+            lastElevenActions.forEach(async action => {
+                await pQuery.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${scheduleTemplateId}, ${action.id}, ${i++});`);
+            });
+            expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId};`)).length).to.equal(11);
+            
+            //  Schedule from the template 
+            schedule = await autoscheduler.create.schedule();
+        });
+
+        it('Will be a new schedule', async function() {
+            // It'll be a new schedule
+            const updatedScheduleId = autoscheduler.update.schedule(2);
+            expect(updatedScheduleId).to.equal(schedule.id + 1);
+        });
+
+        xit('Will use the last nine actions', async function () {
+            // The schedule should use all the same actions except 0, 1. So nine actions. 
+            expect((await pQuery.query(`SELECT * FROM schedule_events WHERE schedule_id = ${updatedScheduleId}`)).length).to.equal(9);
+        })
+
+        xit('Has a new and linked schedule template', async function () {
+            // It should have a new schedule template. Link that.
+            const basedOnTemplateId = (await pQuery.query(`SELECT based_on_template_id FROM schedules WHERE id = ${updatedScheduleId}`))[0].based_on_template_id;
+            expect(basedOnTemplateId).to.not.equal(schedule.template.id);
+        })
+
+        after(async function() {
+            /// Teardown
+            //  Remove: 
+            //  schedule links for the schedule template
+            //  schedule
+            //  actions links for the schedule template
+            await pQuery.query(`DELETE FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId}`);
+            expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${scheduleTemplateId};`)).length).to.equal(0);
+            //  actions
+            for (let i = 0; i < lastElevenActions.length; i++) {
+                const action = lastElevenActions[i];
+                await pQuery.query(`DELETE FROM actions WHERE id = ${action.id}`);
+                expect((await pQuery.select('*', 'actions', 'id', action.id)).length).to.equal(0);
+            }
+            //  schedule template
+            await pQuery.query(`DELETE FROM schedule_templates WHERE id = ${scheduleTemplateId}`);
+        });
     })
+
+    after(function() {
+        setTimeout(() => {
+            process.exit(0);
+        }, 200);
+    });
 });
 

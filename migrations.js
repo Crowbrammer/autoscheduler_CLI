@@ -15,13 +15,13 @@ async function up(pQuery, loud) {
     await pQuery.query('CREATE TABLE outcomes (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
     if (loud)
         console.log('Migrating for obstacles');
-    await pQuery.query('CREATE TABLE obstacles (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
+    await pQuery.query('CREATE TABLE obstacles (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, is_handled BOOLEAN, is_deleted BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
     if (loud)
         console.log('Migrating for decisions');
     await pQuery.query('CREATE TABLE decisions (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
     if (loud)
         console.log('Migrating for schedules');
-    await pQuery.query('CREATE TABLE schedules (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
+    await pQuery.query('CREATE TABLE schedules (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), based_on_template_id INTEGER, is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
     if (loud)
         console.log('Migrating for events');
     await pQuery.query('CREATE TABLE events (id INTEGER PRIMARY KEY AUTO_INCREMENT, summary VARCHAR(255), start DATETIME, end DATETIME, base_action_id INTEGER, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
@@ -69,6 +69,7 @@ async function up(pQuery, loud) {
                                                 FOREIGN KEY (schedule_template_id) REFERENCES schedule_templates(id));');
 }
 async function down(pQuery, loud) {
+    await dropTable(loud, pQuery, 'decision_schedule_templates');
     await dropTable(loud, pQuery, 'obstacle_decisions');
     await dropTable(loud, pQuery, 'outcome_schedule_templates');
     await dropTable(loud, pQuery, 'outcome_obstacles');

@@ -22,6 +22,14 @@ a current schedule
 a schedule
 >> Schedule the current schedule template
 
+<< a us
+>> Show current schedule with numbers at each event. Entering a number will 
+   generate a new template and schedule from the template, with the first
+   action being that linked with the number. Entering '+ <action name> <duration> @2'
+   will put it where action #2 is and move the other actions down. It will
+   then reschedule it. 
+   
+
 /**
  * Current flow:
  * 
@@ -43,3 +51,19 @@ I can't quickly reschedule at a certain point...
 Can't modify the actions of the schedule template... 
 
 Idea: Try it -> Add to todo list -> Test -> Work -> Refactor
+
+<< a p 
+>> See the current purpose
+
+<< a o
+>> See the current outcome and purpose
+
+<< a ob
+>> See the obstacles
+
+<< a --rm ob
+>> Show a list of obstacles... The next command will remove it
+
+
+<< a --h ob
+>> Show a list of obstacles. Mark one as handled. Won't show up anymore. 
