@@ -1,6 +1,6 @@
 {
   "name": "cli-app-template",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "prettyquery": "^1.8.3",
+    "prettyquery": "^1.8.6",
     "sql-escape": "^1.0.1"
   },
   "devDependencies": {

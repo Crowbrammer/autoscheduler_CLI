@@ -1,10 +1,20 @@
 << a current
->> Show the currenct schedule_template and actions
+>> Show the currenct purpose, outcome, obstacle(s), decisions, schedule template, schedule.... 
 
- - [] 
+<< a cp 'Blah'
+>> Creates a new purpose
 
-a set-outcome
->> Sets a new schedule template and its name
+<< a co 'Blah' <number>
+>> Creates a new outcome and time desired to accomplish it
+
+<< a ct 'Blah'
+>> Creates a new schedule template and its name
+
+<< a ro
+>> Retrieves the past ten outcomes under the current purpose
+
+<< a ro --all
+>> Retrieves all outcomes (for the user's profile)
 
 a current schedule
 >> Show the current schedule
@@ -21,3 +31,15 @@ a schedule
  *  - Refer to the schedule whenever
  *  - The current template should be locked
  */
+
+ Modify past schedules...
+ Modify current schedules
+ Reschedule
+ Say why
+ Set the outcome
+Reorder actions in the template
+
+I can't quickly reschedule at a certain point...
+Can't modify the actions of the schedule template... 
+
+Idea: Try it -> Add to todo list -> Test -> Work -> Refactor

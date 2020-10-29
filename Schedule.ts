@@ -5,6 +5,7 @@ const pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_P
 
 /** Note: This schedule models the GCal API.**/
 export default class Schedule {
+    id;
     name;
     tasks;
     startTime;
@@ -44,6 +45,7 @@ export default class Schedule {
       event.end.SQLDateTime   = this.toSQLDateString(event.end.posix);
       event.end.time          = new Date(event.end.posix).toLocaleTimeString();
       event.summary           = task.name;
+      event.base_action_id    = task.id;
       return event;
     }
 
@@ -74,30 +76,9 @@ export default class Schedule {
       const scheduleId = (await pQuery.query(`INSERT INTO schedules (name) VALUES ('${this.name}');`)).insertId;
       for (let i = 0; i < this.events.length; i++) {
         const event = this.events[i];
-        const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}')`)).insertId;
+        const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
         await pQuery.insert('schedule_events', ['schedule_id', 'event_id'], [[scheduleId, eventId]]);
       }
+      this.id = scheduleId;
     }
-
-    // async save() {
-    //   // Default options are marked with *
-    //   console.log('tasks:', this.tasks);
-    //   const response = await fetch('schedule-templates/store', {
-    //     method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    //     mode: 'cors', // no-cors, *cors, same-origin
-    //     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    //     credentials: 'same-origin', // include, *same-origin, omit
-    //     headers: {
-    //       'Content-Type': 'application/json'
-    //       // 'Content-Type': 'application/x-www-form-urlencoded',
-    //     },
-    //     redirect: 'follow', // manual, *follow, error
-    //     referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-    //     body: JSON.stringify({scheduleTemplateName: this.name, tasks: this.tasks}) // body data type must match "Content-Type" header
-    //   });
-    //   return response.json(); // parses JSON response into native JavaScript objects
-    }
-    
-    
-    
-  }
+}

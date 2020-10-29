@@ -38,6 +38,7 @@ class Schedule {
         event.end.SQLDateTime = this.toSQLDateString(event.end.posix);
         event.end.time = new Date(event.end.posix).toLocaleTimeString();
         event.summary = task.name;
+        event.base_action_id = task.id;
         return event;
     }
     niceDisplay() {
@@ -65,9 +66,10 @@ class Schedule {
         const scheduleId = (await pQuery.query(`INSERT INTO schedules (name) VALUES ('${this.name}');`)).insertId;
         for (let i = 0; i < this.events.length; i++) {
             const event = this.events[i];
-            const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}')`)).insertId;
+            const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
             await pQuery.insert('schedule_events', ['schedule_id', 'event_id'], [[scheduleId, eventId]]);
         }
+        this.id = scheduleId;
     }
 }
 exports.default = Schedule;
