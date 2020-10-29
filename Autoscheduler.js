@@ -9,6 +9,7 @@ class Autoscheduler {
         this.create = new Create(options);
         this.delete = new Delete(options);
         this.retrieve = new Retrieve(options);
+        this.update = new Update({ ...options, parent: this });
     }
 }
 exports.default = Autoscheduler;
@@ -36,7 +37,20 @@ class CRUD {
     ;
 }
 class Create extends CRUD {
-    action() { }
+    async action(name, duration) {
+        if (/\D+/.test(duration))
+            throw new Error('Add a number-only duration');
+        if (!name)
+            throw new Error('Add a name to the action.');
+        const actionId = (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${name}', '${duration}')`)).insertId;
+        const currentTemplate = await this.current.template();
+        if (currentTemplate) {
+            // Need to set the order, which requires knowing how many sta's exist
+            const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
+            await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${currentTemplate.id}, ${actionId}, ${numStas + 1})`);
+        }
+        return actionId;
+    }
     ;
     async removeAllCurrent(table_name) {
         await this.driver.query(`UPDATE ${table_name} SET is_current = false`);
@@ -64,12 +78,11 @@ class Create extends CRUD {
         // Get the current schedule template
         const currentScheduleTemplate = await this.current.template();
         // It should use the schedule template's name
-        // const scheduleId = (await this.driver.query(`INSERT INTO schedules (name, is_current) VALUES ('${currentScheduleTemplate.name}', true)`)).insertId;
         // Create the events
         // Get the actions related to the schedule
         const templateActions = await this.driver.query(`SELECT * FROM schedule_template_actions sta \
-        INNER JOIN actions a ON sta.action_id = a.id \
-        WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}`);
+                                                        INNER JOIN actions a ON sta.action_id = a.id \
+                                                        WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}`);
         const schedule = new Schedule_1.default(templateActions, currentScheduleTemplate.id, currentScheduleTemplate.name);
         await schedule.save();
         // Link the schedule to the current decisiion
@@ -87,18 +100,30 @@ class Create extends CRUD {
     ;
 }
 class Update extends CRUD {
+    constructor(options) {
+        super(options);
+        this.parent = options.parent;
+    }
     action() { }
     ;
     async schedule(actionNum) {
-        const oldScheduleTemplate = this.current.template();
-        const oldActions = await pQuery;
-        // Create a new schedule template with the actions after a certain point...
-        return 3;
+        const oldActions = await this.related.actions();
+        const newTemplateId = await this.parent.create.template();
+        const actionSubset = oldActions.slice(actionNum - 1); // - 1 to keep the selected action
+        for (let i = 0; i < actionSubset.length; i++) {
+            const action = actionSubset[i];
+            await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${newTemplateId}, ${action.id}, ${i + 1})`);
+        }
+        return await this.parent.create.schedule();
     }
     ;
 }
 class Delete extends CRUD {
-    action() { }
+    async action(id) {
+        await this.driver.query(`DELETE FROM schedule_template_actions WHERE action_id = ${id}`);
+        await this.driver.query(`DELETE FROM actions WHERE id = ${id}`);
+        return id;
+    }
     ;
     async obstacle(id) {
         await this.driver.query(`DELETE FROM obstacles WHERE id = ${id}`);
@@ -200,7 +225,8 @@ class Related {
         const currentTemplate = await this.parent.current.template();
         return await this.driver.query(`SELECT * FROM schedule_template_actions sta \
                                                     INNER JOIN actions a ON sta.action_id = a.id \
-                                                    WHERE sta.schedule_template_id = ${currentTemplate.id};`);
+                                                    WHERE sta.schedule_template_id = ${currentTemplate.id} \
+                                                    ORDER BY order_num;`);
     }
     ;
     async decisions() {

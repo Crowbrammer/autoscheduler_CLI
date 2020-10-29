@@ -1,3 +1,12 @@
+<< a ct <template-name>
+>> Template, '<template-name>' created and set as current
+
+<< a ca <action-name> <action-duration>
+>> Action named '<action-name>' of duration <action-duration>m created and connected to the template 
+   named <current-template-name>
+
+
+
 << a current
 >> Show the currenct purpose, outcome, obstacle(s), decisions, schedule template, schedule.... 
 
@@ -16,10 +25,10 @@
 << a ro --all
 >> Retrieves all outcomes (for the user's profile)
 
-a current schedule
+a s|schedule
 >> Show the current schedule
 
-a schedule
+a c schedule
 >> Schedule the current schedule template
 
 << a us
