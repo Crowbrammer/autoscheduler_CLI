@@ -10,7 +10,7 @@ async function main() {
     const query = pQuery.query;
     const autoscheduler = new Autoscheduler({ driver: pQuery });
     const currentTemplate = await autoscheduler.retrieve.current.template();
-    let schedule;
+    let schedule = await autoscheduler.retrieve.current.schedule();
     let ct;
     switch (process.argv[2]) {
         case 'ct': // Create template
@@ -34,12 +34,10 @@ async function main() {
             await autoscheduler.create.action(process.argv[3], process.argv[4]);
             console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name}'`);
             break;
-        case 'us': // Update schedule
-            if (/\D+/.test(process.argv[3]))
-                throw new Error('Yo. Need a number for the update, yo.');
-            schedule = await autoscheduler.update.schedule(process.argv[3]);
+        case 'cs': // Create schedule
+            schedule = await autoscheduler.create.schedule();
             console.log(greeting);
-            console.log('\nSchedule updated for the template named \'' + schedule.template.name + '\'.');
+            console.log('\nSchedule created for the template named \'' + schedule.template.name + '\'.');
             console.log('------');
             console.log(schedule.events[0].start.time);
             ct = 1;
@@ -50,10 +48,12 @@ async function main() {
             console.log('------');
             console.log(farewell);
             break;
-        case 'cs': // Create schedule
-            schedule = await autoscheduler.create.schedule();
+        case 'us': // Update schedule
+            if (/\D+/.test(process.argv[3]))
+                throw new Error('Yo. Need a number for the update, yo.');
+            schedule = await autoscheduler.update.schedule(process.argv[3]);
             console.log(greeting);
-            console.log('\nSchedule created for the template named \'' + schedule.template.name + '\'.');
+            console.log('\nSchedule updated for the template named \'' + schedule.template.name + '\'.');
             console.log('------');
             console.log(schedule.events[0].start.time);
             ct = 1;
@@ -75,6 +75,23 @@ async function main() {
             console.log('------');
             console.log(farewell);
             break;
+        case 'rs': // Retrieve schedule
+            console.log(greeting);
+            if (!schedule) {
+                console.log('\nNo current schedule available.');
+                break;
+            }
+            console.log('\nHere are the events for schedule:', currentTemplate.name);
+            console.log('------');
+            const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
+            console.log(new Date(scheduledEvents[0].start).toLocaleTimeString());
+            ct = 1;
+            scheduledEvents.forEach(event => {
+                console.log(` ${ct++}. ${event.summary}`);
+                console.log(new Date(event.end).toLocaleTimeString());
+            });
+            console.log('------');
+            console.log(farewell);
         // Make it show the current schedule...
         // Deploy the schedule to the site...
         default:

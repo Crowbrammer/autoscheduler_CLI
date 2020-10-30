@@ -178,7 +178,6 @@ describe('Autoscheduler', async function() {
         await pQuery.query('DELETE FROM actions WHERE id = ' + actionId);
     })
 
-    
     it('Deletes an action', async function () {
         // Set up
         // Actions will be linked to schedule templates. The action deletion should delete the link. 
@@ -332,6 +331,28 @@ describe('Autoscheduler', async function() {
         await pQuery.query(`DELETE FROM decisions WHERE id = ${decisionId}`);
     });
 
+    it('Shows the currently selected schedule', async function () {
+
+        // Make sure there are no currently selected obstacles
+        await pQuery.query('UPDATE schedules SET is_current = false;');
+        expect((await pQuery.query('SELECT * FROM schedules WHERE is_current = true;')).length).to.equal(0);
+        // Set something I make as the current
+        const scheduleId = (await pQuery.query('INSERT INTO schedules (name, is_current) VALUES (\'Lol\', true);')).insertId;
+        const currentSchedules = await pQuery.select('*', 'schedules','id', scheduleId);
+        expect(currentSchedules.length).to.equal(1);
+        expect(currentSchedules[0].id).to.equal(scheduleId);
+        expect(currentSchedules[0].name).to.equal('Lol');
+        expect(currentSchedules[0].is_current).to.equal(1);
+        
+        const currentSchedule = await autoscheduler.retrieve.current.schedule();
+        expect(currentSchedule.id).to.equal(scheduleId);
+        expect(currentSchedule.name).to.equal(currentSchedules[0].name);
+        expect(currentSchedule.is_current).to.equal(1);
+
+        // Tear down
+        await pQuery.query(`DELETE FROM schedules WHERE id = ${scheduleId}`);
+    });
+
     it('Shows the past ten outcomes under the current purpose', async function() {
         // Set up
         const outcomeNames = [];
@@ -480,17 +501,53 @@ describe('Autoscheduler', async function() {
         }
     });
 
-    xit('Lets me undo an update... in case I select the wrong action');
+    it('Shows the events related to the current schedule', async function() {
+        // Set up
+        const events = [];
+        for (let i = 0; i < 11; i++) {
+            events.push([`Action #${i}`, 'NOW()', 'NOW()']);
+        }
+        // Have eleven actions
+        await pQuery.insert('events', ['summary', 'start', 'end'], events);
+        const lastElevenEvents = await pQuery.query('SELECT id FROM events ORDER BY id DESC LIMIT 11');
+        expect(lastElevenEvents.length).to.equal(11);
 
-    xit('For reliability, events have actual order numbers associated with them')
-
-    xit('Shows the events related to the schedule', async function () {
+        // Connect 'em to a schedule_template
+        await pQuery.query('UPDATE schedules SET is_current = false');
+        const scheduleId = (await pQuery.query('INSERT INTO schedules (name, is_current) VALUES (\'Haha\', true);')).insertId;
+        lastElevenEvents.forEach(async event => {
+            await pQuery.query(`INSERT INTO schedule_events (schedule_id, event_id) VALUES (${scheduleId}, ${event.id});`);
+        });
+        const scheduledEvents = await pQuery.query(`SELECT * FROM schedule_events WHERE schedule_id = ${scheduleId};`);
+        expect(scheduledEvents.length).to.equal(11);
         
+        // Test
+
+        const relatedEvents = await autoscheduler.retrieve.related.events();
+        expect(relatedEvents.length).to.equal(11);
+        expect(relatedEvents[3].id).to.equal(scheduledEvents[3].event_id);
+        
+        // Tear down
+        await pQuery.query(`DELETE FROM schedule_events WHERE schedule_id = ${scheduleId}`);
+        await pQuery.query(`DELETE FROM schedules WHERE id = ${scheduleId}`);
+        expect((await pQuery.select('*', 'schedule_events', 'schedule_id', scheduleId)).length).to.equal(0);
+        for (let i = 0; i < lastElevenEvents.length; i++) {
+            const event = lastElevenEvents[i];
+            await pQuery.query(`DELETE FROM events WHERE id = ${event.id}`);
+            expect((await pQuery.select('*', 'events', 'id', event.id)).length).to.equal(0);
+        }
+    });
+
+    it('Lets me reorder a schedule', async function () {
+        expect(false).to.equal(true, 'Make a test for this.')
     })
+    xit('Lets me undo an update... in case I select the wrong action');
+    xit('For reliability, events have actual order numbers associated with them')
     xit('Updates the schedule (template) with a new time');
     xit('Says if it was missed or not');
     xit('Lets me add a reason if it was missed');
     xit('Shows my past X schedules');
+    
     describe('Rescheduling', async function() {
         let scheduleTemplateId;
         let actions;

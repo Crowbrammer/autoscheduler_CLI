@@ -212,7 +212,12 @@ class Current implements AutoschedulerOperation {
             return null;
         return currentPurposes[0];
     };
-    schedule() {};
+    async schedule(): Promise<Id> {
+        const currentSchedules = await this.driver.query(`SELECT * FROM schedules WHERE is_current = true`);
+        if (currentSchedules.length === 0) 
+            return null;
+        return currentSchedules[0];
+    };
     async template() {
         const currentTemplates = await this.driver.query(`SELECT * FROM schedule_templates WHERE is_current = true ORDER BY id DESC`);
         if (currentTemplates.length === 0) 
@@ -231,7 +236,6 @@ class Related implements AutoschedulerRelationOperations {
         this.parent = options.parent;
     }
     async actions() {
-        // Find the current outcome... 
         const currentTemplate = await this.parent.current.template();
         return await this.driver.query(`SELECT * FROM schedule_template_actions sta \
                                                     INNER JOIN actions a ON sta.action_id = a.id \
@@ -239,11 +243,18 @@ class Related implements AutoschedulerRelationOperations {
                                                     ORDER BY order_num;`);
     };
     async decisions() {
-        // Find the current outcome... 
         const currentObstacle = await this.parent.current.obstacle();
         return await this.driver.query(`SELECT * FROM obstacle_decisions od \
                                                     INNER JOIN decisions d ON od.decision_id = d.id \
                                                     WHERE od.obstacle_id = ${currentObstacle.id};`);
+    };
+    async events() {
+        const currentSchedule = await this.parent.current.schedule();
+        if (currentSchedule) 
+            return await this.driver.query(`SELECT * FROM schedule_events se \
+                                                    INNER JOIN events e ON se.event_id = e.id \
+                                                    WHERE se.schedule_id = ${currentSchedule.id}
+                                                    ORDER BY start;`);
     };
     async obstacles() {
         // Find the current outcome... 
@@ -253,7 +264,6 @@ class Related implements AutoschedulerRelationOperations {
                                                     WHERE oo.outcome_id = ${currentOutcome.id};`);
     };
     async outcomes() {
-        // Find the current outcome... 
         const currentPurpose = await this.parent.current.purpose();
         return await this.driver.query(`SELECT * FROM purpose_outcomes po \
                                                     INNER JOIN outcomes o ON po.outcome_id = o.id \

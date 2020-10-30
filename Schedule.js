@@ -64,7 +64,7 @@ class Schedule {
     }
     async save() {
         // Add all the events
-        const scheduleId = (await pQuery.query(`INSERT INTO schedules (name, based_on_template_id) VALUES ('${this.name}', ${this.templateId});`)).insertId;
+        const scheduleId = (await pQuery.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, true);`)).insertId;
         for (let i = 0; i < this.events.length; i++) {
             const event = this.events[i];
             const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
