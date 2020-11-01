@@ -66,13 +66,18 @@ async function main() {
             break;
         case 'ra': // Retrieve actions
             console.log(greeting);
-            console.log('\nHere are the actions for template:', currentTemplate.name);
-            console.log('------');
             const scheduleTemplateActions = await autoscheduler.retrieve.related.actions();
-            scheduleTemplateActions.forEach(async (action) => {
-                console.log(`  ${action.order_num} - ${action.name} for ${action.duration}mins`);
-            });
-            console.log('------');
+            if (scheduleTemplateActions.length > 0) {
+                console.log('\nHere are the actions for template:', currentTemplate.name);
+                console.log('------');
+                scheduleTemplateActions.forEach(async (action) => {
+                    console.log(`  ${action.order_num} - ${action.name} for ${action.duration}mins`);
+                });
+                console.log('------');
+            }
+            else {
+                console.log('\nNo actions created for this template yet.');
+            }
             console.log(farewell);
             break;
         case 'rs': // Retrieve schedule
@@ -84,12 +89,17 @@ async function main() {
             console.log('\nHere are the events for schedule:', currentTemplate.name);
             console.log('------');
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
-            console.log(scheduledEvents[0].start.slice(11, 16));
-            ct = 1;
-            scheduledEvents.forEach(event => {
-                console.log(` ${ct++}. ${event.summary}`);
-                console.log(event.end.slice(11, 16));
-            });
+            if (scheduledEvents.length > 0) {
+                console.log(scheduledEvents[0].start.slice(11, 16));
+                ct = 1;
+                scheduledEvents.forEach(event => {
+                    console.log(` ${ct++}. ${event.summary}`);
+                    console.log(event.end.slice(11, 16));
+                });
+            }
+            else {
+                console.log('\nThere are no events scheduled');
+            }
             console.log('------');
             console.log(farewell);
         case 'da':
@@ -102,6 +112,7 @@ async function main() {
             // Deleted a non-existing thing
             autoscheduler.delete.action(relatedActions[Number(process.argv[3]) - 1].id); // The ordered actions are 1-indexed;
             console.log(farewell);
+            break;
         // Make it show the current schedule...
         // Deploy the schedule to the site...
         // Make it remove an action
