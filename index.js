@@ -105,6 +105,12 @@ async function main() {
         // Make it show the current schedule...
         // Deploy the schedule to the site...
         // Make it remove an action
+        case 'help':
+            const fs = require('fs');
+            const man = fs.readFileSync(__dirname + '/help.txt', 'utf8');
+            console.log();
+            console.log(man);
+            break;
         default:
             break;
     }
@@ -192,12 +198,12 @@ async function main() {
     //                 break;
     //         }
     //         break;
-    //     case 'help':
-    //         const fs = require('fs');
-    //         const man = fs.readFileSync(__dirname + '/help.txt', 'utf8');
-    //         console.log();
-    //         console.log(man);
-    //         break;
+    // case 'help':
+    //     const fs = require('fs');
+    //     const man = fs.readFileSync(__dirname + '/help.txt', 'utf8');
+    //     console.log();
+    //     console.log(man);
+    //     break;
     //     default:
     //         break;
     // }
