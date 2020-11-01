@@ -84,16 +84,27 @@ async function main() {
             console.log('\nHere are the events for schedule:', currentTemplate.name);
             console.log('------');
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
-            console.log(new Date(scheduledEvents[0].start).toLocaleTimeString());
+            console.log(scheduledEvents[0].start.slice(11, 16));
             ct = 1;
             scheduledEvents.forEach(event => {
                 console.log(` ${ct++}. ${event.summary}`);
-                console.log(new Date(event.end).toLocaleTimeString());
+                console.log(event.end.slice(11, 16));
             });
             console.log('------');
             console.log(farewell);
+        case 'da':
+            console.log(greeting);
+            if (/\D+/.test(process.argv[3]))
+                throw new Error('Select an action to delete with a number');
+            // Get related actions.
+            const relatedActions = await autoscheduler.retrieve.related.actions();
+            // Select the action by order_num
+            // Deleted a non-existing thing
+            autoscheduler.delete.action(relatedActions[Number(process.argv[3]) - 1].id); // The ordered actions are 1-indexed;
+            console.log(farewell);
         // Make it show the current schedule...
         // Deploy the schedule to the site...
+        // Make it remove an action
         default:
             break;
     }
