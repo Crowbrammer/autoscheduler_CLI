@@ -9,6 +9,7 @@ Use Parkinson's Law by tightly scheduling activities more automatically.
     a ca <name> <duration> <position>  -> Create an action which binds to the current template at <position>
     a cs                               -> Create a schedule from the current template and associated actions
     a rs                               -> Retrieve the current schedule
+    a rt                               -> Rerieve the current template with bound actions
     a ra                               -> Retrieve actions for the current template
     a ut <action-at> <move-to>         -> Move <action-at> to position of <move-to> and bump following actions
     a da <#>                           -> Deletes an action
