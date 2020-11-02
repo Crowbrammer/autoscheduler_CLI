@@ -6,7 +6,7 @@ Use Parkinson's Law by tightly scheduling activities more automatically.
 ```
     a ct <name>                        -> Create a template. The first step.
     a ca <name> <duration>             -> Create an action which binds to the current template
-    a ca <name> <duration> <position>  -> Create an action which binds to the current template
+    a ca <name> <duration> <position>  -> Create an action which binds to the current template at <position>
     a cs                               -> Create a schedule from the current template and associated actions
     a rs                               -> Retrieve the current schedule
     a ra                               -> Retrieve actions for the current template
