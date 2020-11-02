@@ -117,6 +117,34 @@ class Update extends CRUD {
         return await this.parent.create.schedule();
     }
     ;
+    async template(options) {
+        if (!options.signal)
+            throw new Error('Cannot update without the signal option (i.e. signal: \'reorder\')');
+        switch (options.signal) {
+            case 'reorder':
+                if (/\D+/.test(options.actionAt))
+                    throw new Error('Set the actionAt property. (a rt; see actions; the numbers to the left is what you\'ll select)');
+                if (/\D+/.test(options.moveTo))
+                    throw new Error('Set the actionAt property. (a rt; see actions; the numbers to the left is where you can target to move to. Actions will be bumped down.)');
+                // Get an ordered list of actions related to the template
+                const actions = await this.parent.retrieve.related.actions();
+                if (options.moveTo > actions.length || options.moveTo < 0)
+                    throw new Error('Attempting to move the action out of bounds.');
+                // Put set the order_num of the task to its position
+                const currentTemplate = await this.parent.retrieve.current.template();
+                const actionAt = actions[Number(options.actionAt) - 1];
+                // Get actions at index order_num - 1 and beyond...
+                // Query to Increment their IDs // UPDATE schedule_template_actions sta WHERE action_id = ${a.id} SET order_num = sta.order_num + 1
+                for (let i = options.moveTo - 1; i < actions.length; i++) {
+                    const action = actions[i];
+                    await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${action.order_num + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
+                }
+                await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${options.moveTo} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${actionAt.id} `);
+                break;
+            default:
+                break;
+        }
+    }
 }
 class Delete extends CRUD {
     async action(id) {

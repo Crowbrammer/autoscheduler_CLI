@@ -48,6 +48,27 @@ async function main() {
             console.log('------');
             console.log(farewell)
             break;
+
+        case 'ut':
+            switch (process.argv[3]) {
+                case 'reorder':
+                    await autoscheduler.update.template({signal: 'reorder', actionAt: process.argv[4], moveTo: process.argv[5]});
+                    console.log(greeting);
+                    console.log(`\nAction at position ${process.argv[4]} moved to position ${process.argv[5]}`)
+                    console.log('------');
+                    const actions = await autoscheduler.retrieve.related.actions();
+                    for (let i = 0; i < actions.length; i++) {
+                        const action = actions[i];
+                        console.log(`  ${i + 1}  - ${action.name} for ${action.duration} min`);
+                    }
+                    console.log('------');
+                    console.log(farewell);
+                    break;
+            
+                default:
+                    break;
+            }
+            break;
         case 'us': // Update schedule
             if (/\D+/.test(process.argv[3])) throw new Error('Yo. Need a number for the update, yo.');
             schedule = await autoscheduler.update.schedule(process.argv[3]);
@@ -79,6 +100,19 @@ async function main() {
             }
             console.log(farewell);
             break;
+        case 'rt': // Retrieve template
+            console.log(greeting);
+            console.log(`\nCurrent actions for template: ${currentTemplate.name}`)
+            console.log('------');
+            const actions = await autoscheduler.retrieve.related.actions();
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                console.log(`  ${i + 1}  - ${action.name} for ${action.duration} min`);
+            }
+            console.log('------');
+            console.log(farewell);
+            break;
+
         case 'rs': // Retrieve schedule
             console.log(greeting);
             if (!schedule) {
@@ -90,10 +124,13 @@ async function main() {
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
             if (scheduledEvents.length > 0) {
                 console.log(scheduledEvents[0].start.slice(11, 16));
+                // console.log(scheduledEvents[0].start.constructor.name);
                 ct = 1;
+                // console.log(scheduledEvents);
                 scheduledEvents.forEach(event => {
                     console.log(` ${ct++}. ${event.summary}`);
-                    console.log(event.end.slice(11, 16));
+                    console.log(event.end.toLocaleTimeString());
+                    // console.log(event.end.slice(11, 16));
                 });
             } else {
                 console.log('\nThere are no events scheduled')
@@ -101,6 +138,7 @@ async function main() {
             
             console.log('------')
             console.log(farewell);
+            break;
         case 'da':
             console.log(greeting)
             if (/\D+/.test(process.argv[3]))
