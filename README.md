@@ -1,7 +1,7 @@
 # autoscheduler_CLI
 Use Parkinson's Law by tightly scheduling activities more automatically. 
 
-# Usage examples:
+## Usage examples:
 
 ```
     a ct <name>                        -> Create a template. The first step.
