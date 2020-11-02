@@ -13,6 +13,7 @@ async function main() {
     const currentTemplate = await autoscheduler.retrieve.current.template();
     let schedule = await autoscheduler.retrieve.current.schedule();
     let ct;
+    
     switch (process.argv[2]) {
         case 'ct': // Create template
             console.log(greeting);
@@ -31,8 +32,15 @@ async function main() {
                 console.log('Must put a number-only duration as the fourth argument');
                 process.exit(0);
             } 
-            await autoscheduler.create.action(process.argv[3], process.argv[4]);
-            console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name}'`);
+            const aId = await autoscheduler.create.action(process.argv[3], process.argv[4]); // FIXME: Bad variable name workaround for switch-case scoping
+
+            if (!/\D+/.test(process.argv[5])) {// If a number-only fifth argument, place it there...
+                const orderNum = (await autoscheduler.retrieve.related.actions()).length;
+                await autoscheduler.update.template({signal: 'reorder', actionAt: orderNum, moveTo: process.argv[5]});
+                console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name} at position ${process.argv[5]}'`);
+            } else {
+                console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name}'`);
+            }
             break;
         case 'cs': // Create schedule
             schedule = await autoscheduler.create.schedule();
