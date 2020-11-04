@@ -205,6 +205,47 @@ describe('Autoscheduler', async function() {
    
     xit('Should throw an error if trying to create an action without a current template');
 
+    describe('Reordering', async function() {
+        let currentTemplate;
+        let actions;
+        let retrievedActions;
+        beforeEach(async function() {
+            currentTemplate = await autoscheduler.create.template('Be amazing');
+            actions  = [];
+            actions.push(await autoscheduler.create.action('AS', 15));
+            actions.push(await autoscheduler.create.action('D3', 20));
+            actions.push(await autoscheduler.create.action('AS', 10));
+            retrievedActions = await autoscheduler.retrieve.related.actions()
+        });
+        it('Has a new current template', async function() {
+            expect((await autoscheduler.retrieve.current.template()).id).to.equal(currentTemplate);
+        });
+
+        it('The current has three actions', async function () {
+            retrievedActionIds = retrievedActions.map(action => action.id);
+            expect(retrievedActionIds).to.include.members(actions);
+        });
+
+        xit('Has all action orders within bounds', async function () {
+            expect(retrievedActions.every(action => action.order_num <= retrievedActions.length)).to.be.true;
+        })
+        
+        it('Updating it, all actions still within bounds', async function () {
+            await autoscheduler.update.template({signal: 'reorder', actionAt: 3, moveTo: 2});
+            retrievedActions = await autoscheduler.retrieve.related.actions() // Refresh it.
+            expect(retrievedActions.every(action => action.order_num <= retrievedActions.length)).to.be.true;
+        })
+
+        // it('Throws an error if ')
+        
+        it('Create an action at a certain point; all actions still within bounds', async function () {
+            const aid = await autoscheduler.create.action('Cat', 15, 2)
+            const actions = await autoscheduler.retrieve.related.actions();
+            expect(actions[1].id).to.equal(aid);
+            expect(actions.every(action => action.order_num <= actions.length)).to.be.true;
+        })
+
+    });
     xit('Lets me reorder actions for the current template');
 
     xit('Should error out if no current actions');

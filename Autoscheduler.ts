@@ -11,7 +11,7 @@ export default class Autoscheduler {
         if (!options.driver) 
             throw new Error('Add a (PQuery) driver to this before continuing.');
         this.driver   = options.driver;
-        this.create   = new Create(options);
+        this.create   = new Create({...options, parent: this});
         this.delete   = new Delete(options);
         this.retrieve = new Retrieve(options);
         this.update   = new Update({...options, parent: this});
@@ -61,15 +61,25 @@ abstract class CRUD implements AutoschedulerOperation {
 }
 
 class Create extends CRUD {
-    async action(name: string, duration: number) {
+    parent;
+    constructor(options) {
+        super(options);
+        this.parent = options.parent;
+    }
+
+    async action(name: string, duration: number, orderNum: number) {
+        if (!name)                throw new Error('Add a name to the action.');
         if (/\D+/.test(duration)) throw new Error('Add a number-only duration');
-        if (!name) throw new Error('Add a name to the action.');
-        const actionId = (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${name}', '${duration}')`)).insertId;
-        const currentTemplate = await this.current.template();
+        const actionId =          (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${name}', '${duration}')`)).insertId;
+        const currentTemplate =   await this.current.template();
         if (currentTemplate) {
             // Need to set the order, which requires knowing how many sta's exist
             const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
             await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${currentTemplate.id}, ${actionId}, ${numStas + 1})`);
+            if (orderNum) {
+                if (orderNum > numStas) throw new Error('Lol, you\'re out of bounds. Lower your desired order num.');
+                await this.parent.update.template({signal: 'reorder', actionAt: numStas + 1, moveTo: orderNum});
+            }
         }
         return actionId;
     };
@@ -122,7 +132,7 @@ class Create extends CRUD {
     };
 }
 
-class Update extends CRUD {
+export class Update extends CRUD {
     parent;
     constructor(options) {
         super(options);
@@ -148,21 +158,31 @@ class Update extends CRUD {
                 if (/\D+/.test(options.actionAt))
                     throw new Error('Set the actionAt property. (a rt; see actions; the numbers to the left is what you\'ll select)');
                 if (/\D+/.test(options.moveTo))
-                    throw new Error('Set the actionAt property. (a rt; see actions; the numbers to the left is where you can target to move to. Actions will be bumped down.)');
+                    throw new Error('Set the moveTo property. (a rt; see actions; the numbers to the left is where you can target to move to. Actions will be bumped down.)');
                 // Get an ordered list of actions related to the template
                 const actions = await this.parent.retrieve.related.actions();
                 if (options.moveTo > actions.length || options.moveTo < 0)
                     throw new Error('Attempting to move the action out of bounds.');
                 // Put set the order_num of the task to its position
                 const currentTemplate = await this.parent.retrieve.current.template();
-                const actionAt = actions[Number(options.actionAt) - 1];
-                // Get actions at index order_num - 1 and beyond...
-                // Query to Increment their IDs // UPDATE schedule_template_actions sta WHERE action_id = ${a.id} SET order_num = sta.order_num + 1
-                for (let i = options.moveTo - 1; i < actions.length; i++) {
+                // Pluck the action from actionAt;
+                const plucked = actions.splice(Number(options.actionAt) - 1, 1);
+                // Put it at the point;
+                actions.splice(Number(options.moveTo) - 1, 0, plucked[0]);
+                
+                for (let i = 0; i < actions.length; i++) {
                     const action = actions[i];
-                    await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${action.order_num + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
+                    await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${i + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
                 }
-                await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${options.moveTo} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${actionAt.id} `);
+
+                // const actionAt = actions[Number(options.actionAt) - 1]; // Adapting one-indexed thing for zero-index
+                // // Get actions at index order_num - 1 and beyond...
+                // // Query to Increment their IDs // UPDATE schedule_template_actions sta WHERE action_id = ${a.id} SET order_num = sta.order_num + 1
+                // for (let i = options.moveTo - 1; i < actions.length; i++) {
+                //     const action = actions[i];
+                    // await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${action.order_num + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
+                // }
+                // await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${options.moveTo} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${actionAt.id} `);
 
                                
                 break;

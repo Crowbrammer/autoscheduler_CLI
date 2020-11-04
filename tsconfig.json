@@ -9,7 +9,8 @@
         "./Autoscheduler.ts",
         "./Schedule.ts",
         "./Messenger.ts",
-        "./db/sqlite/m_create_tables.ts"
+        "./db/sqlite/m_create_tables.ts",
+        "./test/index.test.ts"
     ]
 
 }

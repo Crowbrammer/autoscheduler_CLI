@@ -68,6 +68,22 @@ export class PrepMessenger extends BaseMessenger {
     }
 }
 
+export class RetriveTemplateMessenger extends BaseMessenger {
+    
+    async message() {
+        this.msg += this.greeting;
+        this.msg += `\nCurrent actions for template: ${this.currentTemplate.name}`
+        this.msg += '\n------';
+        const actions = await autoscheduler.retrieve.related.actions();
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
+            this.msg += `\n  ${i + 1}  - ${action.name} for ${action.duration} min`;
+        }
+        this.msg += '\n------';
+        this.msg += `\n\n${this.farewell}`;
+    }
+}
+
 class ScheduleMessenger extends BaseMessenger {
     schedule: any;
     buildScheduleMessage() {
