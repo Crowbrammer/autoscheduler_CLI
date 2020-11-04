@@ -11,7 +11,7 @@ export class BaseMessenger implements Messenger {
     msg: string = '';
     currentTemplate;
     constructor(options?) {
-        this.currentTemplate = options.currentTemplate;
+        if (options) this.currentTemplate = options.currentTemplate;
     }
     message() {}
     greeting: string = '\nThank you for using the Autoscheduler.';

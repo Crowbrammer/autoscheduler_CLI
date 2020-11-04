@@ -9,7 +9,8 @@ class BaseMessenger {
         this.msg = '';
         this.greeting = '\nThank you for using the Autoscheduler.';
         this.farewell = 'Thank you again for using the autoscheduler. Have a nice day!';
-        this.currentTemplate = options.currentTemplate;
+        if (options)
+            this.currentTemplate = options.currentTemplate;
     }
     message() { }
 }

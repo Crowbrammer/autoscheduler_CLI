@@ -78,7 +78,7 @@ async function main() {
             console.log('------');
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
             if (scheduledEvents.length > 0) {
-                console.log(scheduledEvents[0].start.slice(11, 16));
+                console.log(scheduledEvents[0].start.toLocaleTimeString());
                 ct = 1;
                 scheduledEvents.forEach(event => {
                     console.log(` ${ct++}. ${event.summary}`);
