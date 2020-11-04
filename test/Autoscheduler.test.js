@@ -226,7 +226,7 @@ describe('Autoscheduler', async function() {
             expect(retrievedActionIds).to.include.members(actions);
         });
 
-        xit('Has all action orders within bounds', async function () {
+        it('Has all action orders within bounds', async function () {
             expect(retrievedActions.every(action => action.order_num <= retrievedActions.length)).to.be.true;
         })
         
