@@ -61,6 +61,32 @@ class PrepMessenger extends BaseMessenger {
     }
 }
 exports.PrepMessenger = PrepMessenger;
+class ScheduleMessenger extends BaseMessenger {
+    buildScheduleMessage() {
+        this.msg += `${this.greeting}`;
+        this.msg += `\n\nSchedule created for the template named '${this.schedule.template.name}'.`;
+        this.msg += `\n------`;
+        this.msg += `\n${this.schedule.events[0].start.time}`;
+        for (let i = 0; i < this.schedule.events.length; i++) {
+            const event = this.schedule.events[i];
+            this.msg += `\n ${i + 1}. ${event.summary}`;
+            this.msg += `\n${event.end.time}`;
+        }
+        this.msg += `\n------`;
+        return this.msg += `\n\n${this.farewell}`;
+    }
+}
+class UpdateScheduleMessenger extends ScheduleMessenger {
+    constructor(options) {
+        super(options);
+        this.actionNum = options.actionNum;
+    }
+    async message() {
+        this.schedule = await autoscheduler.update.schedule(this.actionNum);
+        return this.buildScheduleMessage();
+    }
+}
+exports.UpdateScheduleMessenger = UpdateScheduleMessenger;
 class RetrieveActionsMessenger extends BaseMessenger {
     async message(updated) {
         this.msg += `${this.greeting}`;
@@ -93,20 +119,10 @@ class ReorderActionsMessenger extends BaseMessenger {
     }
 }
 exports.ReorderActionsMessenger = ReorderActionsMessenger;
-class CreateScheduleMessenger extends BaseMessenger {
+class CreateScheduleMessenger extends ScheduleMessenger {
     async message() {
         this.schedule = await autoscheduler.create.schedule();
-        this.msg += `${this.greeting}`;
-        this.msg += `\n\nSchedule created for the template named '${this.schedule.template.name}'.`;
-        this.msg += `\n------`;
-        this.msg += `\n${this.schedule.events[0].start.time}`;
-        for (let i = 0; i < this.schedule.events.length; i++) {
-            const event = this.schedule.events[i];
-            this.msg += `\n ${i + 1}. ${event.summary}`;
-            this.msg += `\n${event.end.time}`;
-        }
-        this.msg += `\n------`;
-        return this.msg += `\n\n${this.farewell}`;
+        return this.buildScheduleMessage();
     }
 }
 exports.CreateScheduleMessenger = CreateScheduleMessenger;

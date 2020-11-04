@@ -3,7 +3,6 @@ const PQuery        = require('prettyquery');
 const pQuery        = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
 const Autoscheduler = require('./Autoscheduler').default;
 const autoscheduler = new Autoscheduler({driver: pQuery});
-const esc           = require('sql-escape');
 const farewell      = '\nThank you again for using the autoscheduler. Have a nice day!'
 const greeting      = '\nThank you for using the Autoscheduler.'
 import { CreateTemplateMessenger, 
@@ -11,7 +10,8 @@ import { CreateTemplateMessenger,
          Messenger, 
          CreateScheduleMessenger,
          ReorderActionsMessenger,
-         RetrieveActionsMessenger} from './Messenger';
+         RetrieveActionsMessenger,
+         UpdateScheduleMessenger} from './Messenger';
 
 
 async function main() {
@@ -47,18 +47,7 @@ async function main() {
             break;
         case 'us': // Update schedule
             if (/\D+/.test(process.argv[3])) throw new Error('Yo. Need a number for the update, yo.');
-            schedule = await autoscheduler.update.schedule(process.argv[3]);
-            console.log(greeting);
-            console.log('\nSchedule updated for the template named \'' + schedule.template.name + '\'.');
-            console.log('------');
-            console.log(schedule.events[0].start.time);
-            ct = 1;
-            schedule.events.forEach(event => {
-                console.log(` ${ct++}. ${event.summary}`);
-                console.log(event.end.time);
-            });
-            console.log('------');
-            console.log(farewell);
+            messenger = new UpdateScheduleMessenger({actionNum: process.argv[3]});
             break;
         
         case 'ra': // Retrieve actions
@@ -87,7 +76,7 @@ async function main() {
             console.log('------');
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
             if (scheduledEvents.length > 0) {
-                console.log(scheduledEvents[0].start.toLocaleTimeString();
+                console.log(scheduledEvents[0].start.toLocaleTimeString());
                 ct = 1;
                 scheduledEvents.forEach(event => {
                     console.log(` ${ct++}. ${event.summary}`);
