@@ -5,10 +5,11 @@ const pQuery = new PQuery({ user: process.env.DB_USER, password: process.env.DB_
 const Autoscheduler = require('./Autoscheduler').default;
 const autoscheduler = new Autoscheduler({ driver: pQuery });
 class BaseMessenger {
-    constructor() {
+    constructor(options) {
         this.msg = '';
         this.greeting = '\nThank you for using the Autoscheduler.';
         this.farewell = 'Thank you again for using the autoscheduler. Have a nice day!';
+        this.currentTemplate = options.currentTemplate;
     }
     message() { }
 }
@@ -34,11 +35,10 @@ class CreateTemplateMessenger extends BaseMessenger {
 exports.CreateTemplateMessenger = CreateTemplateMessenger;
 class CreateActionMessenger extends BaseMessenger {
     constructor(options) {
-        super();
+        super(options);
         this.actionName = options.actionName;
         this.actionDuration = options.actionDuration;
         this.actionOrder = options.actionOrder;
-        this.currentTemplate = options.currentTemplate;
     }
     async message() {
         this.msg += `${this.greeting}`;
@@ -56,10 +56,42 @@ class CreateActionMessenger extends BaseMessenger {
 }
 exports.CreateActionMessenger = CreateActionMessenger;
 class PrepMessenger extends BaseMessenger {
-    message() {
+    async message() {
     }
 }
 exports.PrepMessenger = PrepMessenger;
+class RetrieveActionsMessenger extends BaseMessenger {
+    async message(updated) {
+        this.msg += `${this.greeting}`;
+        const scheduleTemplateActions = await autoscheduler.retrieve.related.actions();
+        if (scheduleTemplateActions.length > 0) {
+            this.msg += `\n\n${updated ? 'Actions updated. ' : ''}Here are the ${updated ? 'new ' : ''}actions for template: ${this.currentTemplate.name}`;
+            this.msg += `\n------`;
+            scheduleTemplateActions.forEach(async (action) => {
+                this.msg += `\n  ${action.order_num} - ${action.name} for ${action.duration}mins`;
+            });
+            this.msg += `\n------`;
+        }
+        else {
+            this.msg += `\nNo actions created for this template yet.`;
+        }
+        return this.msg += `\n\n${this.farewell}`;
+    }
+}
+exports.RetrieveActionsMessenger = RetrieveActionsMessenger;
+class ReorderActionsMessenger extends BaseMessenger {
+    constructor(options) {
+        super(options);
+        this.actionAt = options.actionAt;
+        this.moveTo = options.moveTo;
+        this.retrieveActionsMessenger = new RetrieveActionsMessenger(options);
+    }
+    async message() {
+        await autoscheduler.update.template({ signal: 'reorder', actionAt: this.actionAt, moveTo: this.moveTo });
+        return await this.retrieveActionsMessenger.message(true);
+    }
+}
+exports.ReorderActionsMessenger = ReorderActionsMessenger;
 class CreateScheduleMessenger extends BaseMessenger {
     async message() {
         this.schedule = await autoscheduler.create.schedule();

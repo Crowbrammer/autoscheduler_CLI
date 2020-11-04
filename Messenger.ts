@@ -4,11 +4,15 @@ const Autoscheduler = require('./Autoscheduler').default;
 const autoscheduler = new Autoscheduler({driver: pQuery});
 
 export interface Messenger {
-    message();
+    message(updated?);
 }
 
 export class BaseMessenger implements Messenger {
     msg: string = '';
+    currentTemplate;
+    constructor(options?) {
+        this.currentTemplate = options.currentTemplate;
+    }
     message() {}
     greeting: string = '\nThank you for using the Autoscheduler.';
     farewell: string = 'Thank you again for using the autoscheduler. Have a nice day!';
@@ -37,13 +41,11 @@ export class CreateActionMessenger extends BaseMessenger {
     actionName: string;
     actionDuration: string;
     actionOrder: any;
-    currentTemplate: any;
     constructor(options) {
-        super();
+        super(options);
         this.actionName = options.actionName;
         this.actionDuration = options.actionDuration;
         this.actionOrder = options.actionOrder
-        this.currentTemplate = options.currentTemplate;
     }
     async message() {
         this.msg += `${this.greeting}`
@@ -61,10 +63,46 @@ export class CreateActionMessenger extends BaseMessenger {
 
 export class PrepMessenger extends BaseMessenger {
     
-    message() {
+    async message() {
         
     }
 }
+
+export class RetrieveActionsMessenger extends BaseMessenger {
+    
+    async message(updated) {
+        this.msg += `${this.greeting}`;
+        const scheduleTemplateActions = await autoscheduler.retrieve.related.actions();
+        if (scheduleTemplateActions.length > 0) {
+            this.msg += `\n\n${updated ? 'Actions updated. ' : ''}Here are the ${updated ? 'new ' : ''}actions for template: ${this.currentTemplate.name}`;
+            this.msg += `\n------`
+            scheduleTemplateActions.forEach(async action => {
+                this.msg += `\n  ${action.order_num} - ${action.name} for ${action.duration}mins`;
+            });
+            this.msg += `\n------`
+        } else {
+            this.msg += `\nNo actions created for this template yet.`;
+        }
+        return this.msg += `\n\n${this.farewell}`;
+    }
+}
+
+export class ReorderActionsMessenger extends BaseMessenger {
+    actionAt: any;
+    moveTo: any;
+    retrieveActionsMessenger: Messenger;
+    constructor(options) {
+        super(options);
+        this.actionAt = options.actionAt;
+        this.moveTo = options.moveTo;
+        this.retrieveActionsMessenger = new RetrieveActionsMessenger(options);
+    }
+    async message() {
+        await autoscheduler.update.template({ signal: 'reorder', actionAt: this.actionAt, moveTo: this.moveTo });
+        return await this.retrieveActionsMessenger.message(true);
+    }
+}
+
 
 export class CreateScheduleMessenger extends BaseMessenger {
     schedule: any;

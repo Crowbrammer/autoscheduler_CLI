@@ -31,17 +31,7 @@ async function main() {
         case 'ut':
             switch (process.argv[3]) {
                 case 'reorder':
-                    await autoscheduler.update.template({ signal: 'reorder', actionAt: process.argv[4], moveTo: process.argv[5] });
-                    console.log(greeting);
-                    console.log(`\nAction at position ${process.argv[4]} moved to position ${process.argv[5]}`);
-                    console.log('------');
-                    const actions = await autoscheduler.retrieve.related.actions();
-                    for (let i = 0; i < actions.length; i++) {
-                        const action = actions[i];
-                        console.log(`  ${i + 1}  - ${action.name} for ${action.duration} min`);
-                    }
-                    console.log('------');
-                    console.log(farewell);
+                    messenger = new Messenger_1.ReorderActionsMessenger({ currentTemplate, actionAt: process.argv[4], moveTo: process.argv[5] });
                     break;
                 default:
                     break;
@@ -64,20 +54,7 @@ async function main() {
             console.log(farewell);
             break;
         case 'ra': // Retrieve actions
-            console.log(greeting);
-            const scheduleTemplateActions = await autoscheduler.retrieve.related.actions();
-            if (scheduleTemplateActions.length > 0) {
-                console.log('\nHere are the actions for template:', currentTemplate.name);
-                console.log('------');
-                scheduleTemplateActions.forEach(async (action) => {
-                    console.log(`  ${action.order_num} - ${action.name} for ${action.duration}mins`);
-                });
-                console.log('------');
-            }
-            else {
-                console.log('\nNo actions created for this template yet.');
-            }
-            console.log(farewell);
+            messenger = new Messenger_1.RetrieveActionsMessenger({ currentTemplate });
             break;
         case 'rt': // Retrieve template
             console.log(greeting);
@@ -131,7 +108,8 @@ async function main() {
         default:
             break;
     }
-    console.log(await messenger.message());
+    if (messenger)
+        console.log(await messenger.message());
     pQuery.connection.end();
     process.exit(0);
 }
