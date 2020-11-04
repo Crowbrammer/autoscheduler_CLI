@@ -8,7 +8,9 @@
         "./migrations.ts",
         "./Orderer.ts",
         "./Autoscheduler.ts",
-        "./Schedule.ts"
+        "./Schedule.ts",
+        "./Messenger.ts",
+        "./db/sqlite/m_create_tables.ts"
     ]
 
 }

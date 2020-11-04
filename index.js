@@ -1,13 +1,11 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 const PQuery = require('prettyquery');
 const esc = require('sql-escape');
-// const Schedule = require('./Schedule').default;
 const Autoscheduler = require('./Autoscheduler').default;
 const greeting = '\nThank you for using the Autoscheduler.';
 const farewell = '\nThank you again for using the autoscheduler. Have a nice day!';
 async function main() {
     const pQuery = new PQuery({ user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE });
-    const query = pQuery.query;
     const autoscheduler = new Autoscheduler({ driver: pQuery });
     const currentTemplate = await autoscheduler.retrieve.current.template();
     let schedule = await autoscheduler.retrieve.current.schedule();
@@ -129,13 +127,10 @@ async function main() {
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
             if (scheduledEvents.length > 0) {
                 console.log(scheduledEvents[0].start.slice(11, 16));
-                // console.log(scheduledEvents[0].start.constructor.name);
                 ct = 1;
-                // console.log(scheduledEvents);
                 scheduledEvents.forEach(event => {
                     console.log(` ${ct++}. ${event.summary}`);
                     console.log(event.end.toLocaleTimeString());
-                    // console.log(event.end.slice(11, 16));
                 });
             }
             else {

@@ -2,7 +2,7 @@ require('dotenv').config();
 const PQuery = require('prettyquery');
 
 
-async function up(pQuery: any, loud: boolean): Promise<void> {
+export default async function up(pQuery: any, loud: boolean): Promise<void> {
     if (loud) console.log('Migrating for actions');
     await pQuery.query('CREATE TABLE actions (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), duration INTEGER, date_created DATETIME DEFAULT (NOW()), date_updated DATETIME DEFAULT (NOW()));');
     if (loud) console.log('Migrating for schedule_templates');
