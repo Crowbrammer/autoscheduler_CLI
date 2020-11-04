@@ -6,18 +6,18 @@ const autoscheduler = new Autoscheduler({driver: pQuery});
 const esc           = require('sql-escape');
 const farewell      = '\nThank you again for using the autoscheduler. Have a nice day!'
 const greeting      = '\nThank you for using the Autoscheduler.'
-import { CreateTemplateMessenger, CreateActionMessenger } from './Messenger';
+import { CreateTemplateMessenger, 
+         CreateActionMessenger,
+         Messenger, 
+         CreateScheduleMessenger} from './Messenger';
 
 
 async function main() {
     const currentTemplate = await autoscheduler.retrieve.current.template();
     let schedule = await autoscheduler.retrieve.current.schedule();
     let ct;
-    let messenger;
+    let messenger: Messenger;
 
-    // Switch to determine what polymorphism to use
-    // It will call the message of any polymorphism.
-    
     switch (process.argv[2]) {
         case 'ct': // Create template
             messenger = new CreateTemplateMessenger({templateName: process.argv[3]});
@@ -30,18 +30,7 @@ async function main() {
             messenger = new CreateActionMessenger({currentTemplate, actionName: process.argv[3], actionDuration: process.argv[4], actionOrder: process.argv[5]});
             break;
         case 'cs': // Create schedule
-            schedule = await autoscheduler.create.schedule();
-            console.log(greeting);
-            console.log('\nSchedule created for the template named \'' + schedule.template.name + '\'.');
-            console.log('------');
-            console.log(schedule.events[0].start.time)
-            ct = 1
-            schedule.events.forEach(event => {
-                console.log(` ${ct++}. ${event.summary}`);
-                console.log(event.end.time);
-            });
-            console.log('------');
-            console.log(farewell)
+            messenger = new CreateScheduleMessenger();
             break;
 
         case 'ut':
