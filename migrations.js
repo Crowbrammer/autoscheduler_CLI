@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 require('dotenv').config();
 const PQuery = require('prettyquery');
 async function up(pQuery, loud) {
@@ -68,6 +70,7 @@ async function up(pQuery, loud) {
                                                 FOREIGN KEY (decision_id) REFERENCES decisions(id), \
                                                 FOREIGN KEY (schedule_template_id) REFERENCES schedule_templates(id));');
 }
+exports.default = up;
 async function down(pQuery, loud) {
     await dropTable(loud, pQuery, 'decision_schedule_templates');
     await dropTable(loud, pQuery, 'obstacle_decisions');

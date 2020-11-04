@@ -1,48 +1,33 @@
 require('dotenv').config({path: __dirname + '/.env'});
+const PQuery        = require('prettyquery');
+const pQuery        = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
 const Autoscheduler = require('./Autoscheduler').default;
 const autoscheduler = new Autoscheduler({driver: pQuery});
 const esc           = require('sql-escape');
 const farewell      = '\nThank you again for using the autoscheduler. Have a nice day!'
 const greeting      = '\nThank you for using the Autoscheduler.'
-const PQuery        = require('prettyquery');
-const pQuery        = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
+import { CreateTemplateMessenger, CreateActionMessenger } from './Messenger';
 
 
 async function main() {
     const currentTemplate = await autoscheduler.retrieve.current.template();
     let schedule = await autoscheduler.retrieve.current.schedule();
     let ct;
+    let messenger;
 
     // Switch to determine what polymorphism to use
     // It will call the message of any polymorphism.
     
     switch (process.argv[2]) {
         case 'ct': // Create template
-            console.log(greeting);
-            if (!process.argv[3]) {
-                await autoscheduler.create.template('');
-                console.log('\nUnnamed schedule template created and set as current.')
-            } else {
-                await autoscheduler.create.template(process.argv[3]);
-                console.log(`\nSchedule template named '${process.argv[3]}' created and set as the current template.`)
-            }
-            console.log(farewell);
+            messenger = new CreateTemplateMessenger({templateName: process.argv[3]});
             break;
         case 'ca': // Create action
-            const actionName = process.argv[3]
             if (/\D+/.test(process.argv[4])) {
                 console.log('Must put a number-only duration as the fourth argument');
                 process.exit(0);
             } 
-            await autoscheduler.create.action(process.argv[3], process.argv[4]); // FIXME: Bad variable name workaround for switch-case scoping
-
-            if (!/\D+/.test(process.argv[5])) {// If a number-only fifth argument, place it there...
-                const orderNum = (await autoscheduler.retrieve.related.actions()).length;
-                await autoscheduler.update.template({signal: 'reorder', actionAt: orderNum, moveTo: process.argv[5]});
-                console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name} at position ${process.argv[5]}'`);
-            } else {
-                console.log(`\nAction, '${actionName}', added to the template named '${currentTemplate.name}'`);
-            }
+            messenger = new CreateActionMessenger({currentTemplate, actionName: process.argv[3], actionDuration: process.argv[4], actionOrder: process.argv[5]});
             break;
         case 'cs': // Create schedule
             schedule = await autoscheduler.create.schedule();
@@ -163,6 +148,7 @@ async function main() {
         default:
             break;
     }
+    console.log(await messenger.message());
     pQuery.connection.end();
     process.exit(0);
 }

@@ -6,7 +6,6 @@
     "files": [
         "./index.ts",
         "./migrations.ts",
-        "./Orderer.ts",
         "./Autoscheduler.ts",
         "./Schedule.ts",
         "./Messenger.ts",
