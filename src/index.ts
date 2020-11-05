@@ -1,10 +1,27 @@
 require('dotenv').config({path: __dirname + '/../.env'});
+
+/**
+ * PQuery or prettyquery is a Node.js MySQL promise-basde package 
+ * I made because I didn't find anything satisfactory at the time.
+ */
 const PQuery        = require('prettyquery');
 const pQuery        = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
+
+/**
+ * The Autoscheduler's a bunch of CRUD functions composed together.
+ * I feel like it's an example of a Model in MCV apps. 
+ */
+
 const Autoscheduler = require('./Autoscheduler').default;
 const autoscheduler = new Autoscheduler({driver: pQuery});
+
+/**
+ * This won't be needed soon. It'll be in the messengers after a while. 
+ */
+
 const farewell      = '\nThank you again for using the autoscheduler. Have a nice day!'
 const greeting      = '\nThank you for using the Autoscheduler.'
+
 import { CreateTemplateMessenger, 
          CreateActionMessenger,
          Messenger, 

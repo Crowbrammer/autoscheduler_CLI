@@ -7,7 +7,7 @@
     },
     "files": [
         "./src/index.ts",
-        "./src/migrations.ts",
+        "src/db/migrations.ts",
         "./src/Autoscheduler.ts",
         "./src/Schedule.ts",
         "./src/Messenger.ts",
