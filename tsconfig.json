@@ -17,6 +17,7 @@
         "./src/models/Action.ts",
         "./src/models/Template.ts",
         "./src/models/Schedule.ts"
+        "./src/db/mig_add_soft_delete.ts"
     ]
 
 }

@@ -4,6 +4,7 @@ export default class Action extends AutoschedulerModel {
     id: number | string;
     name: string;
     duration: number | string;
+    is_deleted: boolean
     constructor(options) {
         super();
         if (!options) options = {};
@@ -18,7 +19,7 @@ export default class Action extends AutoschedulerModel {
     };
 
     async retrieve() { // A single action.
-        const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id}`);
+        const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id} AND is_deleted IS NULL;`);
         if (actions.length === 1) {
             this.name = actions[0].name;
             this.duration = actions[0].duration;
@@ -40,5 +41,12 @@ export default class Action extends AutoschedulerModel {
             await this.driver.query(`UPDATE actions SET duration = ${this.duration} WHERE ID = ${this.id}`);
         }
     };
-    async delete() {};
+    async delete() {
+        if (!this.id)
+            throw new Error('Can\'t delete an action without an id');
+        await this.driver.query(`UPDATE actions SET is_deleted = true WHERE id = ${this.id}`);
+        this.is_deleted = true;
+        this.name = null;
+        this.duration = null;
+    };
 }

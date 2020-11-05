@@ -1,10 +1,9 @@
 require('dotenv').config({path: __dirname + '/../../.env'});
 const expect = require('chai').expect;
 const PQuery = require('prettyquery');
-const dbCreds = {user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE};
 const Action = require(__dirname + '/../models/Action').default;
 
-describe('Action', function () {
+describe('Action Model', function () {
     let pQuery;
     before(async function () {
         pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
@@ -44,5 +43,18 @@ describe('Action', function () {
         await actionAgain.retrieve();
         expect(actionAgain.name).to.equal('Lol');
         expect(actionAgain.duration).to.equal(69);
-    })
+    });
+
+    it('Soft deletes an action', async function () {
+        const action = new Action({name: 'Bwa', duration: 5});
+        await action.create();
+        await action.delete();
+        expect(action.is_deleted).to.be.true;
+        expect((await pQuery.query(`SELECT * FROM actions WHERE id = ${action.id}`))[0].is_deleted).to.equal(1);
+        const sameAction = new Action({id: action.id});
+        await sameAction.retrieve();
+        expect(sameAction.name).to.be.undefined;
+        expect(sameAction.duration).to.be.undefined;
+
+    });
 })

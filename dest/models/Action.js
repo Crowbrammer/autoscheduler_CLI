@@ -17,7 +17,7 @@ class Action extends Model_1.AutoschedulerModel {
     }
     ;
     async retrieve() {
-        const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id}`);
+        const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id} AND is_deleted IS NULL;`);
         if (actions.length === 1) {
             this.name = actions[0].name;
             this.duration = actions[0].duration;
@@ -42,7 +42,14 @@ class Action extends Model_1.AutoschedulerModel {
         }
     }
     ;
-    async delete() { }
+    async delete() {
+        if (!this.id)
+            throw new Error('Can\'t delete an action without an id');
+        await this.driver.query(`UPDATE actions SET is_deleted = true WHERE id = ${this.id}`);
+        this.is_deleted = true;
+        this.name = null;
+        this.duration = null;
+    }
     ;
 }
 exports.default = Action;
