@@ -18,6 +18,10 @@ const autoscheduler = new Autoscheduler({ driver: pQuery });
  */
 const farewell = '\nThank you again for using the autoscheduler. Have a nice day!';
 const greeting = '\nThank you for using the Autoscheduler.';
+/**
+ * I'm trying to isolate my code ig. It felt cleaner this way rather
+ * than having a whole pile of unencapsulated code.
+ */
 const Messenger_1 = require("./Messenger");
 async function main() {
     const currentTemplate = await autoscheduler.retrieve.current.template();
@@ -38,7 +42,7 @@ async function main() {
         case 'cs': // Create schedule
             messenger = new Messenger_1.CreateScheduleMessenger();
             break;
-        case 'ut':
+        case 'ut': // Update template
             switch (process.argv[3]) {
                 case 'reorder':
                     messenger = new Messenger_1.ReorderActionsMessenger({ currentTemplate, actionAt: process.argv[4], moveTo: process.argv[5] });
@@ -90,7 +94,7 @@ async function main() {
             console.log('------');
             console.log(farewell);
             break;
-        case 'da':
+        case 'da': // Delete action
             console.log(greeting);
             if (/\D+/.test(process.argv[3]))
                 throw new Error('Select an action to delete with a number');

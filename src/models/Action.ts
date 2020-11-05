@@ -15,6 +15,13 @@ export default class Action extends AutoschedulerModel {
 
     async create() { // Populates the name and duration of the action object.
         this.id = (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${this.name}', '${this.duration}')`)).insertId;
+        const templates = await this.driver.query(`SELECT id FROM schedule_templates WHERE is_current = true;`);
+        if (templates.length === 1) {
+            const currentTemplateId = templates[0].id;
+            await this.link(currentTemplateId);
+        } else if (templates.length > 1) {
+            throw new Error('There\'s more than one template set as current;');
+        }
         return this;
     };
 

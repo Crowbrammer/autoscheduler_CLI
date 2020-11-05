@@ -22,6 +22,11 @@ const autoscheduler = new Autoscheduler({driver: pQuery});
 const farewell      = '\nThank you again for using the autoscheduler. Have a nice day!'
 const greeting      = '\nThank you for using the Autoscheduler.'
 
+/**
+ * I'm trying to isolate my code ig. It felt cleaner this way rather 
+ * than having a whole pile of unencapsulated code.
+ */
+
 import { CreateTemplateMessenger, 
          CreateActionMessenger,
          Messenger, 
@@ -33,14 +38,16 @@ import { CreateTemplateMessenger,
 
 async function main() {
     const currentTemplate = await autoscheduler.retrieve.current.template();
-    let schedule = await autoscheduler.retrieve.current.schedule();
+    let schedule          = await autoscheduler.retrieve.current.schedule();
     let ct;
     let messenger: Messenger;
 
     switch (process.argv[2]) {
+
         case 'ct': // Create template
             messenger = new CreateTemplateMessenger({templateName: process.argv[3]});
             break;
+
         case 'ca': // Create action
             if (/\D+/.test(process.argv[4])) {
                 console.log('Must put a number-only duration as the fourth argument');
@@ -48,20 +55,24 @@ async function main() {
             } 
             messenger = new CreateActionMessenger({currentTemplate, actionName: process.argv[3], actionDuration: process.argv[4], actionOrder: process.argv[5]});
             break;
+
         case 'cs': // Create schedule
             messenger = new CreateScheduleMessenger();
             break;
 
-        case 'ut':
+        case 'ut': // Update template
             switch (process.argv[3]) {
+
                 case 'reorder':
                     messenger = new ReorderActionsMessenger({currentTemplate, actionAt: process.argv[4], moveTo: process.argv[5]});
                     break;
-            
+
                 default:
                     break;
+
             }
             break;
+
         case 'us': // Update schedule
             if (/\D+/.test(process.argv[3])) throw new Error('Yo. Need a number for the update, yo.');
             messenger = new UpdateScheduleMessenger({actionNum: process.argv[3]});
@@ -70,6 +81,7 @@ async function main() {
         case 'ra': // Retrieve actions
             messenger = new RetrieveActionsMessenger({currentTemplate});
             break;
+
         case 'rt': // Retrieve template
             console.log(greeting);
             console.log(`\nCurrent actions for template: ${currentTemplate.name}`)
@@ -102,11 +114,11 @@ async function main() {
             } else {
                 console.log('\nThere are no events scheduled')
             }
-            
             console.log('------')
             console.log(farewell);
             break;
-        case 'da':
+
+        case 'da': // Delete action
             console.log(greeting)
             if (/\D+/.test(process.argv[3]))
                 throw new Error('Select an action to delete with a number');
@@ -114,18 +126,23 @@ async function main() {
             autoscheduler.delete.action(relatedActions[Number(process.argv[3]) - 1].id); // The ordered actions are 1-indexed;
             console.log(farewell)
             break;
+
         case 'help':
             const fs = require('fs');
             const man = fs.readFileSync(__dirname + '/help.txt', 'utf8');
             console.log();
             console.log(man);
             break;
+
         default:
             break;
+
     }
+
     if (messenger) console.log(await messenger.message());
     pQuery.connection.end();
     process.exit(0);
+    
 }
 
 main().catch(err => console.error(err));
