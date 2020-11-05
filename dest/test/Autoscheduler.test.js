@@ -246,7 +246,21 @@ describe('Autoscheduler', async function() {
         })
 
     });
-    xit('Lets me reorder actions for the current template');
+    it('Lets me reorder actions for the current template', async function () {
+        // Create a template
+        await autoscheduler.create.template('Hi');
+        // Add tasks
+        await autoscheduler.create.action('lol', 1);
+        await autoscheduler.create.action('ha', 1);
+        await autoscheduler.create.action('hee', 1);
+        await autoscheduler.create.action('ho', 1);
+        // Add a task into a new spot
+        await autoscheduler.create.action('ho', 1, 3);
+        // Create a schedule 
+        const schedule = await autoscheduler.create.schedule();
+        // Should be in order
+        expect(schedule.tasks[2].order_num).to.equal(3);
+    });
 
     xit('Should error out if no current actions');
 

@@ -123,7 +123,6 @@ class Create extends CRUD {
         // Link the schedule to the current decisiion
         schedule.template = currentScheduleTemplate;
         schedule.decision = await this.current.decision();
-        
         return schedule;
         // Should render other stuff not true... Should return a Signal object... 
     };
