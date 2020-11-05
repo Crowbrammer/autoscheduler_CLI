@@ -1,4 +1,4 @@
-require('dotenv').config({path: __dirname + '/.env'});
+require('dotenv').config({path: __dirname + '/../.env'});
 const PQuery        = require('prettyquery');
 const pQuery        = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
 const Autoscheduler = require('./Autoscheduler').default;

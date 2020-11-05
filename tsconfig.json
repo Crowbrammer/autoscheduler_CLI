@@ -12,7 +12,11 @@
         "./src/Schedule.ts",
         "./src/Messenger.ts",
         "./src/db/sqlite/m_create_tables.ts",
-        "./src/test/index.test.ts"
+        "./src/test/index.test.ts",
+        "./src/models/Model.ts",
+        "./src/models/Action.ts",
+        "./src/models/Template.ts",
+        "./src/models/Schedule.ts"
     ]
 
 }

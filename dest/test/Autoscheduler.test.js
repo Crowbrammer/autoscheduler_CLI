@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({path: __dirname + '/../../.env'});
 const expect = require('chai').expect;
 const PQuery = require('prettyquery');
 const dbCreds = {user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE};
@@ -167,15 +167,15 @@ describe('Autoscheduler', async function() {
         await pQuery.query('UPDATE schedule_templates SET is_current = false');
         const currentTemplateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Lol\', true)')).insertId;
         // Test
-        const actionId = await autoscheduler.create.action('Lol', 15);
-        expect(actionId).to.not.be.undefined;
-        expect((await pQuery.select('id', 'actions','id', actionId)).length).to.equal(1);
+        const action = await autoscheduler.create.action('Lol', 15);
+        expect(action.id).to.not.be.undefined;
+        expect((await pQuery.select('id', 'actions','id', action.id)).length).to.equal(1);
         // It should have an entry with the current template
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionId};`)).length).to.equal(1);
+        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${action.id};`)).length).to.equal(1);
         // Clean up
         await pQuery.query('DELETE FROM schedule_template_actions WHERE schedule_template_id = ' + currentTemplateId);
         await pQuery.query('DELETE FROM schedule_templates WHERE id = ' + currentTemplateId);
-        await pQuery.query('DELETE FROM actions WHERE id = ' + actionId);
+        await pQuery.query('DELETE FROM actions WHERE id = ' + action.id);
     })
 
     it('Deletes an action', async function () {
@@ -223,7 +223,7 @@ describe('Autoscheduler', async function() {
 
         it('The current has three actions', async function () {
             retrievedActionIds = retrievedActions.map(action => action.id);
-            expect(retrievedActionIds).to.include.members(actions);
+            expect(retrievedActionIds).to.include.members(actions.map(action => action.id));
         });
 
         it('Has all action orders within bounds', async function () {
@@ -239,9 +239,9 @@ describe('Autoscheduler', async function() {
         // it('Throws an error if ')
         
         it('Create an action at a certain point; all actions still within bounds', async function () {
-            const aid = await autoscheduler.create.action('Cat', 15, 2)
+            const action = await autoscheduler.create.action('Cat', 15, 2)
             const actions = await autoscheduler.retrieve.related.actions();
-            expect(actions[1].id).to.equal(aid);
+            expect(actions[1].id).to.equal(action.id);
             expect(actions.every(action => action.order_num <= actions.length)).to.be.true;
         })
 
@@ -583,22 +583,22 @@ describe('Autoscheduler', async function() {
         // Setup
         await pQuery.query('UPDATE schedule_templates SET is_current = false');
         const currentTemplateId = (await pQuery.query('INSERT INTO schedule_templates (name, is_current) VALUES (\'Lol\', true)')).insertId;
-        const actionIds = [];
-        actionIds.push(await autoscheduler.create.action('Lol', 15));
-        actionIds.push(await autoscheduler.create.action('Hi', 15));
-        actionIds.push(await autoscheduler.create.action('Wow', 15));
-        expect((await pQuery.select('id', 'actions','id', actionIds[0])).length).to.equal(1); 
-        expect((await pQuery.select('id', 'actions','id', actionIds[1])).length).to.equal(1); 
-        expect((await pQuery.select('id', 'actions','id', actionIds[2])).length).to.equal(1); 
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[0]};`)).length).to.equal(1);
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[1]};`)).length).to.equal(1);
-        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[2]};`)).length).to.equal(1);
+        const actions = [];
+        actions.push(await autoscheduler.create.action('Lol', 15));
+        actions.push(await autoscheduler.create.action('Hi', 15));
+        actions.push(await autoscheduler.create.action('Wow', 15));
+        expect((await pQuery.select('id', 'actions','id', actions[0].id)).length).to.equal(1); 
+        expect((await pQuery.select('id', 'actions','id', actions[1].id)).length).to.equal(1); 
+        expect((await pQuery.select('id', 'actions','id', actions[2].id)).length).to.equal(1); 
+        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[0].id};`)).length).to.equal(1);
+        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[1].id};`)).length).to.equal(1);
+        expect((await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[2].id};`)).length).to.equal(1);
         // End setup. Probably a more elegant way to do this.
         
         // Test
-        let action1 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[0]};`))[0];
-        let action2 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[1]};`))[0];
-        let action3 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actionIds[2]};`))[0];
+        let action1 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[0].id};`))[0];
+        let action2 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[1].id};`))[0];
+        let action3 = (await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplateId} AND action_id = ${actions[2].id};`))[0];
         expect(action1.order_num).to.equal(1);
         expect(action2.order_num).to.equal(2);
         expect(action3.order_num).to.equal(3);
@@ -614,9 +614,9 @@ describe('Autoscheduler', async function() {
         // Cleanup
         await pQuery.query('DELETE FROM schedule_template_actions WHERE schedule_template_id = ' + currentTemplateId);
         await pQuery.query('DELETE FROM schedule_templates WHERE id = ' + currentTemplateId);
-        await pQuery.query('DELETE FROM actions WHERE id = ' + actionIds[0]);
-        await pQuery.query('DELETE FROM actions WHERE id = ' + actionIds[1]);
-        await pQuery.query('DELETE FROM actions WHERE id = ' + actionIds[2]);
+        await pQuery.query('DELETE FROM actions WHERE id = ' + actions[0].id);
+        await pQuery.query('DELETE FROM actions WHERE id = ' + actions[1].id);
+        await pQuery.query('DELETE FROM actions WHERE id = ' + actions[2].id);
         // End cleanup
         
     })

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Schedule_1 = require("./Schedule");
+const Action_1 = require("./models/Action");
 class Autoscheduler {
     constructor(options) {
         if (!options.driver)
@@ -46,19 +47,20 @@ class Create extends CRUD {
             throw new Error('Add a name to the action.');
         if (/\D+/.test(duration))
             throw new Error('Add a number-only duration');
-        const actionId = (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${name}', '${duration}')`)).insertId;
+        const action = new Action_1.default({ name, duration });
+        await action.create();
         const currentTemplate = await this.current.template();
         if (currentTemplate) {
             // Need to set the order, which requires knowing how many sta's exist
             const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
-            await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${currentTemplate.id}, ${actionId}, ${numStas + 1})`);
+            await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${currentTemplate.id}, ${action.id}, ${numStas + 1})`);
             if (orderNum) {
                 if (orderNum > numStas)
                     throw new Error('Lol, you\'re out of bounds. Lower your desired order num.');
                 await this.parent.update.template({ signal: 'reorder', actionAt: numStas + 1, moveTo: orderNum });
             }
         }
-        return actionId;
+        return action;
     }
     ;
     async removeAllCurrent(table_name) {

@@ -1,4 +1,4 @@
-require('dotenv').config({path: __dirname + '/.env'});
+require('dotenv').config({path: __dirname + '/../.env'});
 type Task = {name: string, duration: number} 
 type Id = number | string;
 const PQuery = require('prettyquery');

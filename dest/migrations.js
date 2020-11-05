@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/../.env' });
 const PQuery = require('prettyquery');
 async function up(pQuery, loud) {
     if (loud)
