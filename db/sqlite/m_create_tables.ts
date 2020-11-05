@@ -1,24 +1,37 @@
 require('dotenv').config();
-const {sqlite_db} = require('../../env');
 import Migration from '../Migration';
 const sqlite3 = require('sqlite3');
 const open = require('sqlite').open;
+const {sqlite_db_loc} = require('../../env.js');
+
+class MCreateTablesMigration implements Migration {
+    async up() {
+        const db = await this.makeDb();
+        db.exec('CREATE TABLE blah (id INTEGER PRIMARY KEY AUTOINCREMENT)')
+    }
+    async down() {}
+    async refresh() {}
+    async makeDb() {
+        return await open({
+                  filename: sqlite_db_loc
+                  driver: sqlite3.Database
+                })
+    }
+}
+
+// Need to know more about decorators, static, etc.
+const createTablesMigration = new MCreateTablesMigration();
+export {createTablesMigration};
  
 // this is a top-level await 
-(async () => {
-    // open the database
-    const db = await open({
-      filename: __dirname + '/database.db',
-      driver: sqlite3.Database
-    })
-})()
+// (async () => {
+//     // open the database
+//     const db = await open({
+//       filename: __dirname + '/database.db',
+//       driver: sqlite3.Database
+//     })
+// })()
 
-
-class MCreateSQLiteTables implements Migration {
-    up() {}
-    down() {}
-    refresh() {}
-}
 
 async function up(pQuery: any, loud: boolean): Promise<void> {
 }
@@ -48,8 +61,8 @@ if (require.main === module) {
 }
 
 
-delete require.cache[module.id];
-module.exports = main;
+// delete require.cache[module.id];
+// module.exports = main;
 
 /**
  * Adding a new one

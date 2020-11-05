@@ -1,5 +1,5 @@
 export default interface Migration {
-    up();
+    static up();
     down();
     refresh();
 }

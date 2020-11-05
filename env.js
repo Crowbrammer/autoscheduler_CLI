@@ -1,3 +1,3 @@
 module.exports = {
-    sqlite_db: __dirname + '/db/sqlite/database.db'
+    sqlite_db_loc: __dirname + '/db/sqlite/database.db'
 }

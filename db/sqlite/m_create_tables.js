@@ -1,22 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 require('dotenv').config();
-const { sqlite_db } = require('../../env');
 const sqlite3 = require('sqlite3');
 const open = require('sqlite').open;
-// this is a top-level await 
-(async () => {
-    // open the database
-    const db = await open({
-        filename: __dirname + '/database.db',
-        driver: sqlite3.Database
-    });
-})();
-class MCreateSQLiteTables {
-    up() { }
-    down() { }
-    refresh() { }
+const { sqlite_db_loc } = require('../../env.js');
+class MCreateTablesMigration {
+    async up() {
+        const db = await this.makeDb();
+        db.exec('CREATE TABLE blah (id INTEGER PRIMARY KEY AUTOINCREMENT)');
+    }
+    async down() { }
+    async refresh() { }
+    async makeDb() {
+        return await open({
+            filename: sqlite_db_loc,
+            driver: sqlite3.Database
+        });
+    }
 }
+// Need to know more about decorators, static, etc.
+const createTablesMigration = new MCreateTablesMigration();
+exports.createTablesMigration = createTablesMigration;
+// this is a top-level await 
+// (async () => {
+//     // open the database
+//     const db = await open({
+//       filename: __dirname + '/database.db',
+//       driver: sqlite3.Database
+//     })
+// })()
 async function up(pQuery, loud) {
 }
 async function down(pQuery, loud) {
@@ -39,8 +51,8 @@ if (require.main === module) {
         main().catch(err => console.error(err));
     }
 }
-delete require.cache[module.id];
-module.exports = main;
+// delete require.cache[module.id];
+// module.exports = main;
 /**
  * Adding a new one
  * Removing

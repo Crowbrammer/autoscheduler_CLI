@@ -47,7 +47,7 @@ class CreateActionMessenger extends BaseMessenger {
         if (!/\D+/.test(this.actionOrder)) { // If a number-only fifth argument, place it there...
             const orderNum = (await autoscheduler.retrieve.related.actions()).length;
             await autoscheduler.update.template({ signal: 'reorder', actionAt: orderNum, moveTo: this.actionOrder });
-            this.msg += `\nAction, '${this.actionName}', added to the template named '${this.currentTemplate.name} at position ${this.actionOrder}'`;
+            this.msg += `\n\nAction, '${this.actionName}', added to the template named '${this.currentTemplate.name} at position ${this.actionOrder}'`;
         }
         else {
             this.msg += `\n\nAction, '${this.actionName}', added to the template named '${this.currentTemplate.name}'`;
