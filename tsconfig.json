@@ -2,16 +2,17 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "ESNext",
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "outDir": "./dest"
     },
     "files": [
-        "./index.ts",
-        "./migrations.ts",
-        "./Autoscheduler.ts",
-        "./Schedule.ts",
-        "./Messenger.ts",
-        "./db/sqlite/m_create_tables.ts",
-        "./test/index.test.ts"
+        "./src/index.ts",
+        "./src/migrations.ts",
+        "./src/Autoscheduler.ts",
+        "./src/Schedule.ts",
+        "./src/Messenger.ts",
+        "./src/db/sqlite/m_create_tables.ts",
+        "./src/test/index.test.ts"
     ]
 
 }
