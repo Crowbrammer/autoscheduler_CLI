@@ -93,7 +93,8 @@ class Create extends CRUD {
         // Get the actions related to the schedule
         const templateActions = await this.driver.query(`SELECT * FROM schedule_template_actions sta \
                                                         INNER JOIN actions a ON sta.action_id = a.id \
-                                                        WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}`);
+                                                        WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}
+                                                        ORDER BY sta.order_num`);
         const schedule = new Schedule_1.default(templateActions, currentScheduleTemplate.id, currentScheduleTemplate.name);
         await schedule.save();
         // Link the schedule to the current decisiion
