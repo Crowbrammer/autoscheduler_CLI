@@ -151,14 +151,6 @@ class Update extends CRUD {
                     const action = actions[i];
                     await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${i + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
                 }
-                // const actionAt = actions[Number(options.actionAt) - 1]; // Adapting one-indexed thing for zero-index
-                // // Get actions at index order_num - 1 and beyond...
-                // // Query to Increment their IDs // UPDATE schedule_template_actions sta WHERE action_id = ${a.id} SET order_num = sta.order_num + 1
-                // for (let i = options.moveTo - 1; i < actions.length; i++) {
-                //     const action = actions[i];
-                // await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${action.order_num + 1} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${action.id}`);
-                // }
-                // await this.driver.query(`UPDATE schedule_template_actions SET order_num = ${options.moveTo} WHERE schedule_template_id = ${currentTemplate.id} AND action_id = ${actionAt.id} `);
                 break;
             default:
                 break;

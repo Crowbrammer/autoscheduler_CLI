@@ -33,4 +33,16 @@ describe('Action', function () {
         expect (actionAgain.name).to.equal(action.name);
         expect (actionAgain.duration).to.equal(action.duration);
     });
+
+    it('Updates an action', async function () {
+        const action = new Action({name: 'Bwa', duration: 5});
+        await action.create();
+        action.name = 'Lol';
+        action.duration = 69;
+        await action.update();
+        const actionAgain = new Action({id: action.id});
+        await actionAgain.retrieve();
+        expect(actionAgain.name).to.equal('Lol');
+        expect(actionAgain.duration).to.equal(69);
+    })
 })

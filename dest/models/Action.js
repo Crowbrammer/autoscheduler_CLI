@@ -16,7 +16,6 @@ class Action extends Model_1.AutoschedulerModel {
         return this;
     }
     ;
-    // Only one...
     async retrieve() {
         const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id}`);
         if (actions.length === 1) {
@@ -29,7 +28,19 @@ class Action extends Model_1.AutoschedulerModel {
         return this;
     }
     ;
-    async update() { }
+    async update() {
+        if (!this.id)
+            throw new Error('Can\'t update an action without an id');
+        if (this.name && this.duration) {
+            await this.driver.query(`UPDATE actions SET name = "${this.name}", duration = ${this.duration} WHERE ID = ${this.id}`);
+        }
+        else if (this.name && !this.duration) {
+            await this.driver.query(`UPDATE actions SET name = "${this.name}" WHERE ID = ${this.id}`);
+        }
+        else if (!this.name && this.duration) {
+            await this.driver.query(`UPDATE actions SET duration = ${this.duration} WHERE ID = ${this.id}`);
+        }
+    }
     ;
     async delete() { }
     ;
