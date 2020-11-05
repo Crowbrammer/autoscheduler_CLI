@@ -55,6 +55,16 @@ describe('Action Model', function () {
         await sameAction.retrieve();
         expect(sameAction.name).to.be.undefined;
         expect(sameAction.duration).to.be.undefined;
-
     });
+
+    it('Links an action to the template', async function () {
+        const templateId = (await pQuery.query('INSERT INTO schedule_templates (name) VALUES (\'Haha\')')).insertId;
+        const action = new Action({name: 'Wab', duration: 69});
+        await action.create();
+        let stas = await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${templateId} AND action_id = ${action.id}`);
+        expect(stas.length).to.equal(0);
+        await action.link(templateId);
+        stas = await pQuery.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${templateId} AND action_id = ${action.id}`);
+        expect(stas.length).to.equal(1); // unlink? 
+    })
 })

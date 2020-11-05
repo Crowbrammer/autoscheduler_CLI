@@ -18,6 +18,11 @@ export default class Action extends AutoschedulerModel {
         return this;
     };
 
+    async link(templateId: number) {
+        if (!this.id) throw new Error('Cannot link with an id'); 
+        return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${templateId}, ${this.id});`)).insertId;
+    }   
+
     async retrieve() { // A single action.
         const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id} AND is_deleted IS NULL;`);
         if (actions.length === 1) {
