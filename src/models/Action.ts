@@ -1,4 +1,5 @@
 import {AutoschedulerModel} from "./Model";
+const esc = require('sql-escape');
 
 export default class Action extends AutoschedulerModel {
     id: number | string;
@@ -22,12 +23,15 @@ export default class Action extends AutoschedulerModel {
         } else if (templates.length > 1) {
             throw new Error('There\'s more than one template set as current;');
         }
+
+        
         return this;
     };
 
     async link(templateId: number) {
         if (!this.id) throw new Error('Cannot link with an id'); 
-        return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${templateId}, ${this.id});`)).insertId;
+        const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${templateId}`)).length;
+        return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${templateId}, ${this.id}, ${numStas + 1})`)).insertId;
     }   
 
     async retrieve() { // A single action.

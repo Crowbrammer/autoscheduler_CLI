@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Model_1 = require("./Model");
+const esc = require('sql-escape');
 class Action extends Model_1.AutoschedulerModel {
     constructor(options) {
         super();
@@ -27,7 +28,8 @@ class Action extends Model_1.AutoschedulerModel {
     async link(templateId) {
         if (!this.id)
             throw new Error('Cannot link with an id');
-        return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${templateId}, ${this.id});`)).insertId;
+        const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${templateId}`)).length;
+        return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${templateId}, ${this.id}, ${numStas + 1})`)).insertId;
     }
     async retrieve() {
         const actions = await this.driver.query(`SELECT * FROM actions WHERE id = ${this.id} AND is_deleted IS NULL;`);

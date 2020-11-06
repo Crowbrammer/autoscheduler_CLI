@@ -74,14 +74,11 @@ class Create extends CRUD {
         const action = new Action({name, duration});
         await action.create();
         const currentTemplate =   await this.current.template();
-        if (currentTemplate) {
+        const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
+        if (currentTemplate && orderNum) {
             // Need to set the order, which requires knowing how many sta's exist
-            const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
-            await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${currentTemplate.id}, ${action.id}, ${numStas + 1})`);
-            if (orderNum) {
-                if (orderNum > numStas) throw new Error('Lol, you\'re out of bounds. Lower your desired order num.');
-                await this.parent.update.template({signal: 'reorder', actionAt: numStas + 1, moveTo: orderNum});
-            }
+            if (orderNum > numStas) throw new Error('Lol, you\'re out of bounds. Lower your desired order num.');
+            await this.parent.update.template({signal: 'reorder', actionAt: numStas, moveTo: orderNum});
         }
         return action;
     };
