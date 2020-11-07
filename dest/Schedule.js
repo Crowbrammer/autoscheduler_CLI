@@ -30,13 +30,15 @@ class Schedule {
         let event = {};
         event.start = {};
         event.start.posix = startTime;
-        event.start.SQLDateTime = this.toSQLDateString(event.start.posix);
         event.start.dateTime = new Date(event.start.posix).toISOString();
+        event.start.SQLDateTime = this.toSQLDateString(event.start.dateTime);
+        console.log(event.start.SQLDateTime);
+        console.log(event.start.dateTime.slice(0, 10), event.start.dateTime.slice(11, 19));
         event.start.time = new Date(event.start.posix).toLocaleTimeString();
         event.end = {};
         event.end.posix = startTime + task.duration * 60 * 1000;
         event.end.dateTime = new Date(event.end.posix).toISOString();
-        event.end.SQLDateTime = this.toSQLDateString(event.end.posix);
+        event.end.SQLDateTime = this.toSQLDateString(event.end.dateTime);
         event.end.time = new Date(event.end.posix).toLocaleTimeString();
         event.summary = task.name;
         event.base_action_id = task.id;
@@ -57,10 +59,10 @@ class Schedule {
         }
         return niceDisplay;
     }
-    toSQLDateString(posix) {
-        const datetime = new Date(posix);
-        const sqlDatetime = `${datetime.getFullYear()}-${datetime.getMonth()}-${datetime.getDay()} ${datetime.getHours()}:${datetime.getMinutes()}:${datetime.getSeconds()}`;
-        return sqlDatetime;
+    toSQLDateString(isoDatetimeString) {
+        // const datetime = new Date(posix);
+        // const sqlDatetime = `${datetime.getFullYear()}-${datetime.getMonth()}-${datetime.getDay()} ${datetime.getHours()}:${datetime.getMinutes()}:${datetime.getSeconds()}`;
+        return `${isoDatetimeString.slice(0, 10)} ${isoDatetimeString.slice(11, 19)}`;
     }
     async save() {
         // Add all the events
