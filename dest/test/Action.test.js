@@ -1,12 +1,15 @@
 require('dotenv').config({path: __dirname + '/../../.env'});
 const expect = require('chai').expect;
 const PQuery = require('prettyquery');
+
 const Action = require(__dirname + '/../models/Action').default;
 
 describe('Action Model', function () {
     let pQuery;
     before(async function () {
         pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
+        const {AutoschedulerModel} = require(__dirname + '/../models/Model');
+        AutoschedulerModel.driver = pQuery;
     });
 
     after(async function () {

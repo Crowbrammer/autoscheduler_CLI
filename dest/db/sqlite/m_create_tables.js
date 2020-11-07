@@ -4,37 +4,35 @@ require(`dotenv`).config();
 const sqlite3 = require(`sqlite3`);
 const open = require(`sqlite`).open;
 class CreateTablesMigration {
-    driver;
-    type;
     constructor(options) {
         this.driver = options.driver;
-        this.type = options.type
+        this.type;
     }
     async up(loud) {
         if (loud)
             console.log(`Migrating for actions`);
-        await this.driver.query(`CREATE TABLE actions (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), duration INTEGER, date_created DATETIME DEFAULT (NOW()), date_updated DATETIME DEFAULT (NOW()));`);
+        await this.driver.query(`CREATE TABLE actions (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), duration INTEGER, date_created DATETIME DEFAULT (DATETIME('now')), date_updated DATETIME DEFAULT (DATETIME('now')));`);
         if (loud)
             console.log(`Migrating for schedule_templates`);
-        await this.driver.query(`CREATE TABLE schedule_templates (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE schedule_templates (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for purposes`);
-        await this.driver.query(`CREATE TABLE purposes (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE purposes (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for outcomes`);
-        await this.driver.query(`CREATE TABLE outcomes (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE outcomes (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for obstacles`);
-        await this.driver.query(`CREATE TABLE obstacles (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), is_current BOOLEAN, is_handled BOOLEAN, is_deleted BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE obstacles (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, is_handled BOOLEAN, is_deleted BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for decisions`);
-        await this.driver.query(`CREATE TABLE decisions (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE decisions (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for schedules`);
-        await this.driver.query(`CREATE TABLE schedules (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, name VARCHAR(255), based_on_template_id INTEGER, is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE schedules (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), based_on_template_id INTEGER, is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for events`);
-        await this.driver.query(`CREATE TABLE events (id INTEGER PRIMARY KEY ${this.type === "mysql" ? "AUTO_INCREMENT" : "AUTOINCREMENT"}, summary VARCHAR(255), start DATETIME, end DATETIME, base_action_id INTEGER, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );`);
+        await this.driver.query(`CREATE TABLE events (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, summary VARCHAR(255), start DATETIME, end DATETIME, base_action_id INTEGER, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud)
             console.log(`Migrating for schedule_template_actions`);
         await this.driver.query(`CREATE TABLE schedule_template_actions (schedule_template_id INTEGER, action_id INTEGER, order_num INTEGER, \
@@ -131,5 +129,4 @@ async function main() {
             break;
     }
 }
-
-main().catch(err => console.log(err));
+main().catch(err => console.error(err));

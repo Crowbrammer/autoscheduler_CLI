@@ -1,9 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const PQuery = require('prettyquery');
-const pQuery = new PQuery({ user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE });
-const Autoscheduler = require('./Autoscheduler').default;
-const autoscheduler = new Autoscheduler({ driver: pQuery });
 class BaseMessenger {
     constructor(options) {
         this.msg = '';
@@ -23,11 +19,11 @@ class CreateTemplateMessenger extends BaseMessenger {
     async message() {
         this.msg += `${this.greeting}`;
         if (!process.argv[3]) {
-            await autoscheduler.create.template('');
+            await BaseMessenger.autoscheduler.create.template('');
             this.msg += '\n\nUnnamed schedule template created and set as current.';
         }
         else {
-            await autoscheduler.create.template(this.templateName);
+            await BaseMessenger.autoscheduler.create.template(this.templateName);
             this.msg += `\n\nSchedule template named '${this.templateName}' created and set as the current template.`;
         }
         return this.msg += `\n\n${this.farewell}`;
@@ -43,10 +39,10 @@ class CreateActionMessenger extends BaseMessenger {
     }
     async message() {
         this.msg += `${this.greeting}`;
-        await autoscheduler.create.action(this.actionName, this.actionDuration); // FIXME: Bad variable name workaround for switch-case scoping
+        await BaseMessenger.autoscheduler.create.action(this.actionName, this.actionDuration); // FIXME: Bad variable name workaround for switch-case scoping
         if (!/\D+/.test(this.actionOrder)) { // If a number-only fifth argument, place it there...
-            const orderNum = (await autoscheduler.retrieve.related.actions()).length;
-            await autoscheduler.update.template({ signal: 'reorder', actionAt: orderNum, moveTo: this.actionOrder });
+            const orderNum = (await BaseMessenger.autoscheduler.retrieve.related.actions()).length;
+            await BaseMessenger.autoscheduler.update.template({ signal: 'reorder', actionAt: orderNum, moveTo: this.actionOrder });
             this.msg += `\n\nAction, '${this.actionName}', added to the template named '${this.currentTemplate.name} at position ${this.actionOrder}'`;
         }
         else {
@@ -61,21 +57,21 @@ class PrepMessenger extends BaseMessenger {
     }
 }
 exports.PrepMessenger = PrepMessenger;
-class RetriveTemplateMessenger extends BaseMessenger {
+class RetrieveTemplateMessenger extends BaseMessenger {
     async message() {
         this.msg += this.greeting;
-        this.msg += `\nCurrent actions for template: ${this.currentTemplate.name}`;
+        this.msg += `\n\nCurrent actions for template: ${this.currentTemplate.name}`;
         this.msg += '\n------';
-        const actions = await autoscheduler.retrieve.related.actions();
+        const actions = await BaseMessenger.autoscheduler.retrieve.related.actions();
         for (let i = 0; i < actions.length; i++) {
             const action = actions[i];
             this.msg += `\n  ${i + 1}  - ${action.name} for ${action.duration} min`;
         }
         this.msg += '\n------';
-        this.msg += `\n\n${this.farewell}`;
+        return this.msg += `\n\n${this.farewell}`;
     }
 }
-exports.RetriveTemplateMessenger = RetriveTemplateMessenger;
+exports.RetrieveTemplateMessenger = RetrieveTemplateMessenger;
 class ScheduleMessenger extends BaseMessenger {
     buildScheduleMessage() {
         this.msg += `${this.greeting}`;
@@ -97,7 +93,7 @@ class UpdateScheduleMessenger extends ScheduleMessenger {
         this.actionNum = options.actionNum;
     }
     async message() {
-        this.schedule = await autoscheduler.update.schedule(this.actionNum);
+        this.schedule = await BaseMessenger.autoscheduler.update.schedule(this.actionNum);
         return this.buildScheduleMessage();
     }
 }
@@ -105,7 +101,7 @@ exports.UpdateScheduleMessenger = UpdateScheduleMessenger;
 class RetrieveActionsMessenger extends BaseMessenger {
     async message(updated) {
         this.msg += `${this.greeting}`;
-        const scheduleTemplateActions = await autoscheduler.retrieve.related.actions();
+        const scheduleTemplateActions = await BaseMessenger.autoscheduler.retrieve.related.actions();
         if (scheduleTemplateActions.length > 0) {
             this.msg += `\n\n${updated ? 'Actions updated. ' : ''}Here are the ${updated ? 'new ' : ''}actions for template: ${this.currentTemplate.name}`;
             this.msg += `\n------`;
@@ -129,14 +125,14 @@ class ReorderActionsMessenger extends BaseMessenger {
         this.retrieveActionsMessenger = new RetrieveActionsMessenger(options);
     }
     async message() {
-        await autoscheduler.update.template({ signal: 'reorder', actionAt: this.actionAt, moveTo: this.moveTo });
+        await BaseMessenger.autoscheduler.update.template({ signal: 'reorder', actionAt: this.actionAt, moveTo: this.moveTo });
         return await this.retrieveActionsMessenger.message(true);
     }
 }
 exports.ReorderActionsMessenger = ReorderActionsMessenger;
 class CreateScheduleMessenger extends ScheduleMessenger {
     async message() {
-        this.schedule = await autoscheduler.create.schedule();
+        this.schedule = await BaseMessenger.autoscheduler.create.schedule();
         return this.buildScheduleMessage();
     }
 }

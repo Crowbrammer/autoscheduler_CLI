@@ -1,8 +1,5 @@
 require('dotenv').config({path: __dirname + '/../.env'});
-type Task = {name: string, duration: number} 
 type Id = number | string;
-const PQuery = require('prettyquery');
-const pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});
 
 /** Note: This schedule models the GCal API.**/
 export default class Schedule {
@@ -13,16 +10,19 @@ export default class Schedule {
     events = [];
     start: number;
     templateId: Id;
-    constructor(tasks: Task[], templateId: number, name: string, start = Date.now()) {
-      if (!templateId) {
+    driver: any;
+    constructor(options) {
+      if(!options.driver) 
+        throw new Error('Specify a db driver');
+      if (!options.templateId) {
         throw new Error('Need the id of the template this came from');
       }
-      this.templateId = templateId;
-      this.tasks = tasks;
-      this.startTime = start;
+      this.driver = options.driver;
+      this.templateId = options.templateId;
+      this.tasks = options.tasks;
+      this.startTime = Date.now() || options.start;
+      this.name = options.name;
       this.buildEvents();
-      this.name = name;
-      this.start = start;
     }
     
     buildEvents() {
@@ -76,11 +76,21 @@ export default class Schedule {
     
     async save() {
       // Add all the events
-      const scheduleId = (await pQuery.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, true);`)).insertId;
+      let scheduleId;
+      if (this.driver.constructor.name === 'PQuery') {
+        scheduleId = (await this.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, true);`)).insertId;
+      } else {
+        scheduleId = (await this.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, true);`)).lastID;
+      }
       for (let i = 0; i < this.events.length; i++) {
         const event = this.events[i];
-        const eventId = (await pQuery.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
-        await pQuery.insert('schedule_events', ['schedule_id', 'event_id'], [[scheduleId, eventId]]);
+        let eventId
+        if (this.driver.constructor.name === 'PQuery') {
+          eventId = (await this.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
+        } else {
+          eventId = (await this.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).lastID;
+        }
+        await this.driver.query(`INSERT INTO schedule_events (schedule_id, event_id) VALUES (${scheduleId}, ${eventId})`);
       }
       this.id = scheduleId;
     }

@@ -1,3 +1,29 @@
+<< a cl 'name'
+>> Checklist named "name" set as current.
+
+<< a ca tl bwaa 52 // "to (check)list"
+>> "bwaa" of duration 52 minutes added to checklist, "name"
+
+<< a ca tl waab 69 
+>> "waab" of duration 69 minutes added to checklist, "name"
+
+<< a ul // Use (check)list
+>> actions from "name" added to the template
+
+<< a ul 10
+>> 10 copies of "name" added to the template
+
+// id   | name     |  checklist_id
+// 2425 | name_use |  23
+// If it's a checklist instance, the row has a checklist_id value.
+
+
+
+
+
+
+
+
 << a ct <template-name>
 >> Template, '<template-name>' created and set as current
 

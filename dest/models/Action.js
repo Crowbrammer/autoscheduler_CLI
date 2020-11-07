@@ -4,16 +4,18 @@ const Model_1 = require("./Model");
 const esc = require('sql-escape');
 class Action extends Model_1.AutoschedulerModel {
     constructor(options) {
-        super();
+        super(options);
         if (!options)
             options = {};
         this.id = options.id;
         this.name = options.name;
         this.duration = options.duration;
+        if (!this.driver)
+            throw new Error('Set AutoschedulerModel.driver to your db driver.');
     }
     ;
     async create() {
-        this.id = (await this.driver.query(`INSERT INTO actions (name, duration) VALUES ('${this.name}', '${this.duration}')`)).insertId;
+        this.id = await this.insert(`INSERT INTO actions (name, duration) VALUES ('${this.name}', '${this.duration}')`);
         const templates = await this.driver.query(`SELECT id FROM schedule_templates WHERE is_current = true;`);
         if (templates.length === 1) {
             const currentTemplateId = templates[0].id;
@@ -27,7 +29,7 @@ class Action extends Model_1.AutoschedulerModel {
     ;
     async link(templateId) {
         if (!this.id)
-            throw new Error('Cannot link with an id');
+            throw new Error('Cannot link without an id');
         const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${templateId}`)).length;
         return (await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id, order_num) VALUES (${templateId}, ${this.id}, ${numStas + 1})`)).insertId;
     }

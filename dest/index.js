@@ -2,18 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require('dotenv').config({ path: __dirname + '/../.env' });
 /**
- * PQuery or prettyquery is a Node.js MySQL promise-basde package
- * I made because I didn't find anything satisfactory at the time.
- */
-const PQuery = require('prettyquery');
-const pQuery = new PQuery({ user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE });
-/**
- * The Autoscheduler's a bunch of CRUD functions composed together.
- * I feel like it's an example of a Model in MCV apps.
- */
-const Autoscheduler = require('./Autoscheduler').default;
-const autoscheduler = new Autoscheduler({ driver: pQuery });
-/**
  * This won't be needed soon. It'll be in the messengers after a while.
  */
 const farewell = '\nThank you again for using the autoscheduler. Have a nice day!';
@@ -24,6 +12,48 @@ const greeting = '\nThank you for using the Autoscheduler.';
  */
 const Messenger_1 = require("./Messenger");
 async function main() {
+    /**
+     * So that I can use this anywhere, I made it able to use SQLite in addition
+     * to MySQL. This require some config.
+     */
+    let driver;
+    if (process.env.DB_DRIVER === 'sqlite') {
+        const sqlite3 = require('sqlite3');
+        const { open } = require('sqlite');
+        driver = await open({
+            filename: __dirname + '/db/sqlite/database.db',
+            driver: sqlite3.Database
+        });
+        driver.query = function (query) {
+            if (/INSERT/.test(query)) {
+                return this.run(query);
+            }
+            else {
+                return this.all(query);
+            }
+        };
+    }
+    else {
+        const PQuery = require('prettyquery');
+        driver = new PQuery({ user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE });
+    }
+    /**
+     * PQuery or prettyquery is a Node.js MySQL promise-basde package
+     * I made because I didn't find anything satisfactory at the time.
+     */
+    /**
+     * The Autoscheduler's a bunch of CRUD functions composed together.
+     * I feel like it's an example of a Model in MCV apps.
+     */
+    const Autoscheduler = require('./Autoscheduler').default;
+    const autoscheduler = new Autoscheduler({ driver });
+    /**
+     * The db driver needs to be consistent, and adding a static property
+     * that all the Messenger classes refer to seems like the best way
+     * to have everyone refer to the same autoscheduler with the same
+     * driver instance. Maybe I should turn the autoscheduler into a singleton...
+     */
+    Messenger_1.BaseMessenger.autoscheduler = autoscheduler;
     const currentTemplate = await autoscheduler.retrieve.current.template();
     let schedule = await autoscheduler.retrieve.current.schedule();
     let ct;
@@ -60,16 +90,7 @@ async function main() {
             messenger = new Messenger_1.RetrieveActionsMessenger({ currentTemplate });
             break;
         case 'rt': // Retrieve template
-            console.log(greeting);
-            console.log(`\nCurrent actions for template: ${currentTemplate.name}`);
-            console.log('------');
-            const actions = await autoscheduler.retrieve.related.actions();
-            for (let i = 0; i < actions.length; i++) {
-                const action = actions[i];
-                console.log(`  ${i + 1}  - ${action.name} for ${action.duration} min`);
-            }
-            console.log('------');
-            console.log(farewell);
+            messenger = new Messenger_1.RetrieveTemplateMessenger({ currentTemplate });
             break;
         case 'rs': // Retrieve schedule
             console.log(greeting);
@@ -81,11 +102,11 @@ async function main() {
             console.log('------');
             const scheduledEvents = await autoscheduler.retrieve.related.events(); // Normal schedule API not available like when building.
             if (scheduledEvents.length > 0) {
-                console.log(scheduledEvents[0].start.toLocaleTimeString());
+                console.log(new Date(scheduledEvents[0].start).toLocaleTimeString());
                 ct = 1;
                 scheduledEvents.forEach(event => {
                     console.log(` ${ct++}. ${event.summary}`);
-                    console.log(event.end.toLocaleTimeString());
+                    console.log(new Date(event.end).toLocaleTimeString());
                 });
             }
             else {
@@ -113,7 +134,12 @@ async function main() {
     }
     if (messenger)
         console.log(await messenger.message());
-    pQuery.connection.end();
+    try {
+        autoscheduler.driver.connection.end();
+    }
+    catch (err) {
+        autoscheduler.driver.close();
+    }
     process.exit(0);
 }
 main().catch(err => console.error(err));

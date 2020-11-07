@@ -1,5 +1,4 @@
-const PQuery = require('prettyquery');
-const dbCreds = {user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE};
+require('dotenv').config({path: __dirname + '/../../.env'});
 
 export default interface Model {
     create();
@@ -8,10 +7,27 @@ export default interface Model {
     delete();
 }
 
-export class AutoschedulerModel implements Model{
-    driver = new PQuery(dbCreds)
+export class AutoschedulerModel implements Model {
+    id;
+    static driver;
+    driver;
+    constructor(options) {
+        this.driver = AutoschedulerModel.driver;
+    }
     create() {};
     retrieve() {};
     update() {};
     delete() {};
+    async insert(query) {
+        switch (this.driver.constructor.name) {
+            case 'Database': // SQLite
+                return (await this.driver.query(query)).lastID;
+        
+            case 'PQuery':
+                return (await this.driver.query(query)).insertId;
+        
+            default:
+                throw new Error('Driver not supported or non-existent.');
+        }
+    };
 }

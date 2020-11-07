@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const PQuery = require('prettyquery');
-const dbCreds = { user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE };
+require('dotenv').config({ path: __dirname + '/../../.env' });
 class AutoschedulerModel {
-    constructor() {
-        this.driver = new PQuery(dbCreds);
+    constructor(options) {
+        this.driver = AutoschedulerModel.driver;
     }
     create() { }
     ;
@@ -13,6 +12,17 @@ class AutoschedulerModel {
     update() { }
     ;
     delete() { }
+    ;
+    async insert(query) {
+        switch (this.driver.constructor.name) {
+            case 'Database': // SQLite
+                return (await this.driver.query(query)).lastID;
+            case 'PQuery':
+                return (await this.driver.query(query)).insertId;
+            default:
+                throw new Error('Driver not supported or non-existent.');
+        }
+    }
     ;
 }
 exports.AutoschedulerModel = AutoschedulerModel;

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Schedule_1 = require("./Schedule");
 const Action_1 = require("./models/Action");
+const Model_1 = require("./models/Model");
 class Autoscheduler {
     constructor(options) {
         if (!options.driver)
@@ -11,13 +12,14 @@ class Autoscheduler {
         this.delete = new Delete(options);
         this.retrieve = new Retrieve(options);
         this.update = new Update({ ...options, parent: this });
+        Model_1.AutoschedulerModel.driver = options.driver;
     }
 }
 exports.default = Autoscheduler;
 class CRUD {
     constructor(options) {
         if (!options.driver)
-            throw new Error('Add a (PQuery) driver to the Retrieve class before continuing.');
+            throw new Error('Add a (PQuery or SQLite) driver to the Retrieve class before continuing.');
         this.driver = options.driver;
         this.current = new Current(options);
         this.related = new Related({ ...options, parent: this });
@@ -47,7 +49,7 @@ class Create extends CRUD {
             throw new Error('Add a name to the action.');
         if (/\D+/.test(duration))
             throw new Error('Add a number-only duration');
-        const action = new Action_1.default({ name, duration });
+        const action = new Action_1.default({ name, duration, driver: this.driver });
         await action.create();
         const currentTemplate = await this.current.template();
         const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${currentTemplate.id}`)).length;
@@ -92,7 +94,8 @@ class Create extends CRUD {
                                                         INNER JOIN actions a ON sta.action_id = a.id \
                                                         WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}
                                                         ORDER BY sta.order_num`);
-        const schedule = new Schedule_1.default(templateActions, currentScheduleTemplate.id, currentScheduleTemplate.name);
+        // const schedule = new Schedule(templateActions, currentScheduleTemplate.id, currentScheduleTemplate.name);
+        const schedule = new Schedule_1.default({ tasks: templateActions, templateId: currentScheduleTemplate.id, name: currentScheduleTemplate.name, driver: this.driver });
         await schedule.save();
         // Link the schedule to the current decisiion
         schedule.template = currentScheduleTemplate;
@@ -103,7 +106,13 @@ class Create extends CRUD {
     ;
     async template(name) {
         await this.removeAllCurrent('schedule_templates');
-        return (await this.driver.query(`INSERT INTO schedule_templates (name, is_current) VALUES ('${name}', true)`)).insertId;
+        const insertValue = await this.driver.query(`INSERT INTO schedule_templates (name, is_current) VALUES ('${name}', true)`);
+        if (this.driver.constructor.name === 'Database') {
+            return insertValue.lastID;
+        }
+        else {
+            return insertValue.insertId;
+        }
         // Should render other stuff not true... Should return a Signal object... 
     }
     ;
