@@ -3,12 +3,15 @@ const { open } = require('sqlite');
 const { expect } = require('chai');
 const Builder = require('../../builders/Builder').default;
 const TemplateBuilder = require('../../builders/TemplateBuilder').default;
+const ScheduleBuilder = require('../../builders/ScheduleBuilder').default;
+const EventBuilder = require('../../builders/EventBuilder').default;
 const ChecklistBuilder = require('../../builders/ChecklistBuilder').default;
 const ActionBuilder = require('../../builders/ActionBuilder').default;
 const { AutoschedulerModel } = require('../../models/Model');
 const { default: Schedule } = require('../../models/Schedule');
 const Checklist = require('../../models/Checklist').default;
 const Template = require('../../models/Template').default;
+const Event = require('../../models/Event').default;
 
 
 describe('Model RUDs and links', async function() {
@@ -138,6 +141,146 @@ describe('Model RUDs and links', async function() {
     });
 
     describe('Schedule Model RUDs and links', async function() {
+        it('Has a schedules table', async function () {
+            expect((await sqliteInstance.query('SELECT * FROM sqlite_master WHERE name = \'schedules\';')).length).to.equal(1);
+        })
+        
+        it('Has a schedule_events table', async function () {
+            expect((await sqliteInstance.query('SELECT * FROM sqlite_master WHERE name = \'schedule_events\';')).length).to.equal(1);
+        })
+
+        // After: new Schedule({id: 3}).checkLink(event) where an entry in the schedule_events table
+        // Then:
+        it('returns the link or null', async function () {
+            // Create a schedule and store its id
+            const s = await ScheduleBuilder.create({name: 'Foo', templateId: 1});
+            // Create two events and store its id
+            const start = '2020-11-09 15:15:15';
+            const end   = '2020-11-09 23:15:15';
+            const e = [await EventBuilder.create({summary: 'Bar', start, end}), await EventBuilder.create({summary: 'Bar', start, end})];
+            // Create a linking entry between the CL and one event
+            await sqliteInstance.query(`INSERT INTO schedule_events (schedule_id, event_id) VALUES (${s.id}, ${e[0].id})`);
+            // null if not
+            expect(await s.checkLink(e[1])).to.be.null;
+            // It should return a query result if exists
+            const link = await s.checkLink(e[0]);
+            expect(link.schedule_id).to.be.a('number');
+            expect(link.event_id).to.be.a('number');
+
+        })
+
+        // After: new Schedule({id: 3}).link;
+        // Then: 
+        xit('It connects the schedule to the action', async function () {
+            // Create a schedule and store its id
+            const cl = await ScheduleBuilder.create({name: 'Foo'});
+            // Create a few actions
+            const actions = [];
+            actions.push(await EventBuilder.create({name: 'Bar', duration: 69}));
+            actions.push(await EventBuilder.create({name: 'Bar', duration: 420}));
+            actions.push(await EventBuilder.create({name: 'Bar', duration: 1}));
+    
+            // Run the linking functions
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                await cl.link(action); // Pass an object because it can link to different things: Events, outcomes, schedules(?).
+                // Check that they're linked
+                const link = await cl.checkLink(action);
+                expect(link).to.have.property('schedule_id');
+                expect(link).to.have.property('action_id');
+                expect(link).to.have.property('order_num');
+                // expect(await cl.checkLink(action)).to.have.all.keys('schedule_id', 'action_id', 'order_num');
+            }
+        })
+
+        // After: new Schedule({id: 3}).getEvents();
+        // Then:
+        xit('Pulls actions related to the schedule', async function () {
+            // Create a schedule
+            const cl = await ScheduleBuilder.create({name: 'Foo'});
+            // Create a few actions
+            const events = [await EventBuilder.create({name: 'Bar', duration: 420}), await EventBuilder.create({name: 'Bay', duration: 69}), await EventBuilder.create({name: 'Bor', duration: 1})];
+            // Link 'em
+            for (let i = 0; i < events.length; i++) {
+                const action = events[i];
+                await cl.link(action);
+            }
+            // Use the function
+            const attemptedClEventPull = await cl.getEvents();
+            // Check that it returns the action names (don't worry about the order).
+            expect(attemptedClEventPull.map(action => action.name)).to.include.members(['Bar', 'Bay', 'Bor']);
+            expect(attemptedClEventPull.map(action => action.duration)).to.include.members([420, 69, 1]);
+        })
+
+        // After: new Schedule({id: 3}).isCurrent();
+        // Then
+        it(`Tells me if it's current or not`, async function () {
+            // Create two schedules. Mark one as current.
+            const s0 = await ScheduleBuilder.create({name: 'Whoa', templateId: 1});
+            await s0.markAsCurrent();
+            const s = await ScheduleBuilder.create({name: 'Whoa', templateId: 1});
+            // Run the function. Expect one to be true, the other false.
+            expect(await s0.isCurrent()).to.be.true;
+            expect(await s.isCurrent()).to.be.false;
+        })
+
+        // After: new Schedule({id: 3}).markAsCurrent();
+        // Then:
+        xit('Makes the schedule the current one', async function () {
+            // Create two schedules, mn (mnemonic -> remember it -> store it in a variable)
+            const s0 = await ScheduleBuilder.create({name: 'Foo Fighter'});
+            const s = await ScheduleBuilder.create({name: 'Foo'});
+            // Make one of the schedules current with a query.
+            await sqliteInstance.query(`UPDATE schedules SET is_current = true WHERE id = ${s0.id};`);
+            // Invoke markAsCurrent()
+            await s.markAsCurrent();
+            // Pull the current schedules, mn
+            const pulledCls = await sqliteInstance.query(`SELECT id FROM schedules WHERE is_current = true;`);
+            // Expect s0 to be not current
+            expect((await sqliteInstance.query(''))) // Check if something is current or not...
+            // Expect the pull to be an array of length 1
+            expect(pulledCls.length).to.equal(1);
+            // Expect the entry in that array to have the same id as the schedule
+            expect(pulledCls[0].id).to.equal(s.id);
+        })
+
+        // After: new Schedule().getCurrentSchedule()
+        // Then:
+        xit('Sets the id and name of the current Schedule object to match the current schedule', async function () {
+            // Create a schedule, mn
+            const cl = await ScheduleBuilder.create({name: 'Foo'});
+            // Mark it as current
+            await cl.markAsCurrent();
+            // Without the builder, create a Schedule object
+            const freshCl = new Schedule();
+            // Invoke getCurrentSchedule
+            await freshCl.getCurrentChecklist();
+            // Check that its id and name matches the current Cl's id and name
+            expect(freshCl.id).to.equal(cl.id);
+            expect(freshCl.name).to.equal(cl.name);
+        })
+    });
+
+    describe('Event Model RUDs and links', async function() {
+        it('Has a events table', async function () {
+            expect((await sqliteInstance.query('SELECT * FROM sqlite_master WHERE name = \'events\';')).length).to.equal(1);
+        })
+        
+        it('Has a schedule_events table', async function () {
+            expect((await sqliteInstance.query('SELECT * FROM sqlite_master WHERE name = \'schedule_events\';')).length).to.equal(1);
+        })
+
+
+
+        // After: new Event({summary: 'Wow', start: 2020-11-09T18:26:15.000Z, end: 2020-11-09T18:36:15.000Z}).milStart()
+        // Then: 
+        it('Shows the start and end in military time', function () {
+            // Expect that it converts it to mil time.
+            const e = new Event({start: new Date('2020-11-09T18:26:15.000Z'), end: new Date('2020-11-09T18:36:15.000Z')});
+            expect(e.milStart()).to.equal('13:26');
+            expect(e.milEnd()).to.equal('13:36');
+        })
+
     });
     
     describe('Checklist Model RUDs and links', async function() {

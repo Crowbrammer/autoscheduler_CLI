@@ -77,6 +77,19 @@ describe('Wield the Models', async function() {
     })
 
     // After: RetrieveScheduleMessenger...message
-    // Then: It displays the schedule name and accurate events and time.
+    // Then: 
+    xit('displays the schedule name and accurate events and time', async function () {
+        // Create a template
+        const t = await TemplateBuilder.create({name: 'Foo'});
+        // Set it as current
+        await t.markAsCurrent();
+        // Create three actions
+        const actions = [await ActionBuilder.create({name: 'Bar', duration: 5}), await ActionBuilder.create({name: 'Bay', duration: 10}), await ActionBuilder.create({name: 'Bor', duration: 15})];
+        const s = await ScheduleBuilder.create({name: 'Foo', actions, templateId: t.id});
+        // Link 'em
+        // Create a schedule (from the current template)
+        // \d\d:\d\d should be found six times
+        // The template name and action names should be in there. 
+    })
 
 });

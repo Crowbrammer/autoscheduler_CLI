@@ -190,6 +190,13 @@ describe('Builders build', async function() {
                 return dt + 1000 * 60 * mins;
             }
         })
+
+        // After: ScheduleBuilder.create({name: '', actions: [...], isCurrent: true})
+        // Then:
+        xit('Makes the schedule current on creation if marked', async function () {
+            // Two schedules; One with the flag and one without.
+            // Expect one to be current and the other not. 
+        })
     });
 
 });
