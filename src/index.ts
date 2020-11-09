@@ -139,12 +139,22 @@ async function main() {
                     console.log(new Date(event.end).toLocaleTimeString());
                 });
             } else {
-                console.log('\nThere are no events scheduled')
+                console.log('\nThere are no evtents scheduled')
             }
             console.log('------')
             console.log(farewell);
             break;
-
+        case 're': // Retrieve (current) event
+            console.log('Here\'s the current event:');
+            const currentEvent = await autoscheduler.driver.query(`SELECT summary, start, end FROM schedule_events se \
+                                                             INNER JOIN events e on se.event_id = e.id
+                                                             WHERE se.schedule_id = ${schedule.id} \
+                                                             AND NOW() < end;`);
+            // const nowish = await autoscheduler.driver.query('SELECT NOW();');                                                             
+            // console.log(nowish);
+            console.log(currentEvent);
+                                                             
+            break;
         case 'da': // Delete action
             console.log(greeting)
             if (/\D+/.test(process.argv[3]))
