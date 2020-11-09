@@ -1,6 +1,7 @@
 import { AutoschedulerModel } from "./Model";
 import Event from "./Event";
-const zeroFill = require('zero-fill');
+// import toSQLDate from 'js-date-to-sql-datetime';
+const toSQLDatetime = require('js-date-to-sql-datetime');
 
 require('dotenv').config({path: __dirname + '/../.env'});
 type Id = number | string;
@@ -42,13 +43,11 @@ export default class Schedule extends AutoschedulerModel{
       event.start             = {};
       event.start.posix       = startTime;
       event.start.dateTime    = new Date(event.start.posix).toLocaleString();
-      event.start.SQLDateTime = Schedule.posixToSQL(event.start.dateTime);
       // console.log(event.start.dateTime.slice(0, 10), event.start.dateTime.slice(11, 19));
       event.start.time        = new Date(event.start.posix).toLocaleTimeString();
       event.end               = {};
       event.end.posix         = startTime + action.duration * 60 * 1000;
       event.end.dateTime      = new Date(event.end.posix).toLocaleString();
-      event.end.SQLDateTime   = Schedule.posixToSQL(event.end.dateTime);
       event.end.time          = new Date(event.end.posix).toLocaleTimeString();
       event.summary           = action.name;
       event.base_action_id    = action.id;
@@ -70,12 +69,6 @@ export default class Schedule extends AutoschedulerModel{
       return niceDisplay;
     }
 
-    static posixToSQL(posix) {
-      const 
-      return `${dtString.slice(0, 10)} ${dtString.slice(11, 19)}`;
-
-    }
-    
     async save() {
       // Add all the events
       let scheduleId;
@@ -89,7 +82,6 @@ export default class Schedule extends AutoschedulerModel{
         scheduleId = (await AutoschedulerModel.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, true);`)).lastID;
       
       }
-      // console.log(this.events);
 
       for (let i = 0; i < this.events.length; i++) {
 
@@ -98,11 +90,11 @@ export default class Schedule extends AutoschedulerModel{
 
         if (AutoschedulerModel.driver.constructor.name === 'PQuery') {
 
-          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).insertId;
+          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${toSQLDatetime(event.start.posix)}', '${toSQLDatetime(event.end.posix)}', ${event.base_action_id})`)).insertId;
 
         } else {
 
-          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${event.start.SQLDateTime}', '${event.end.SQLDateTime}', ${event.base_action_id})`)).lastID;
+          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${toSQLDatetime(event.start.posix)}', '${toSQLDatetime(event.end.posix)}', ${event.base_action_id})`)).lastID;
           
         }
 

@@ -138,16 +138,6 @@ describe('Model RUDs and links', async function() {
     });
 
     describe('Schedule Model RUDs and links', async function() {
-        // After passing in a local time string to Schedule.localToSQLDatetimeString
-        // Then
-        it('returns a properly formatted SQL datetime string', function () {
-            // Pass in a local datetimestring
-            const sqlDt = Schedule.posixToSQL();
-            const sqlDt = Schedule.localToSQLDatetimeString('11/9/2020, 11:36:00 AM');
-            // Return YYYY-MM-DD HH:MM:SS
-            expect(sqlDt).to.equal('2020-09-11 11:36:00');
-
-        })
     });
     
     describe('Checklist Model RUDs and links', async function() {
