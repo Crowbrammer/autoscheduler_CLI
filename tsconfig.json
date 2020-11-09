@@ -9,14 +9,18 @@
         "./src/index.ts",
         "src/db/migrations.ts",
         "./src/Autoscheduler.ts",
-        "./src/Schedule.ts",
+        "src/models/Schedule.ts",
         "./src/Messenger.ts",
         "./src/db/sqlite/m_create_tables.ts",
         "./src/test/index.test.ts",
         "./src/models/Model.ts",
         "./src/models/Action.ts",
         "./src/models/Template.ts",
-        "./src/models/Schedule.ts"
+        "./src/models/Schedule.ts",
+        "./src/builders/TemplateBuilder.ts",
+        "./src/builders/ChecklistBuilder.ts",
+        "./src/builders/ActionBuilder.ts",
+        "./src/builders/ScheduleBuilder.ts",
         "./src/db/mig_add_soft_delete.ts"
     ]
 

@@ -61,11 +61,22 @@ export class CreateTablesMigration {
                                                     PRIMARY KEY (decision_id, schedule_template_id), \
                                                     FOREIGN KEY (decision_id) REFERENCES decisions(id), \
                                                     FOREIGN KEY (schedule_template_id) REFERENCES schedule_templates(id));`);
-        console.log(`Up.`);
+                                                    if (loud)
+        console.log(`Migrating for checklists`);
+        await this.driver.query(`CREATE TABLE checklists (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')), is_deleted BOOLEAN);`);
+            console.log(`Up.`);
+        if (loud) console.log(`Migrating for checklist_actions`);
+        await this.driver.query(`CREATE TABLE checklist_actions (checklist_id INTEGER, action_id INTEGER, order_num INTEGER, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')), is_deleted BOOLEAN, \
+                                                    PRIMARY KEY (checklist_id, action_id), \
+                                                    FOREIGN KEY (checklist_id) REFERENCES checklists(id), \
+                                                    FOREIGN KEY (action_id) REFERENCES actions(id));`);
+                                                    if (loud)
     }
     
     async down(loud?: boolean): Promise<void> {
         console.log(`Down.`);
+        await this.dropTable({tableName: `checklist_actions`, loud});
+        await this.dropTable({tableName: `checklists`, loud});
         await this.dropTable({tableName: `decision_schedule_templates`, loud});
         await this.dropTable({tableName: `obstacle_decisions`, loud});
         await this.dropTable({tableName: `outcome_schedule_templates`, loud});
@@ -81,12 +92,13 @@ export class CreateTablesMigration {
         await this.dropTable({tableName: `purposes`, loud});
         await this.dropTable({tableName: `schedule_templates`, loud});
         await this.dropTable({tableName: `actions`, loud});
+        console.log('Hi');
     }
 
     async dropTable(options) {
         if (options.loud)
-            console.log(`Dropping for ${options.table_name}`);
-        await this.driver.query(`DROP TABLE IF EXISTS ${options.table_name};`);
+            console.log(`Dropping for ${options.tableName}`);
+        await this.driver.query(`DROP TABLE IF EXISTS ${options.tableName};`);
     }
     
     async refresh(): Promise<void> {

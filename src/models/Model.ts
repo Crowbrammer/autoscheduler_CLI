@@ -11,7 +11,8 @@ export class AutoschedulerModel implements Model {
     id;
     static driver;
     driver;
-    constructor(options) {
+    options: any;
+    constructor(options?) {
         this.driver = AutoschedulerModel.driver;
     }
     create() {};

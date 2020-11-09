@@ -2,7 +2,7 @@ require('dotenv').config({path: __dirname + '/../../.env'});
 const expect = require('chai').expect;
 const PQuery = require('prettyquery');
 const dbCreds = {user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE};
-const Autoscheduler = require('../Autoscheduler').default;
+const Autoscheduler = require('../../Autoscheduler').default;
 
 describe('Autoscheduler', async function() {
     let pQuery;

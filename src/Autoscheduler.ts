@@ -1,5 +1,5 @@
 type Id = number | string;
-import Schedule from './Schedule';
+import Schedule from './models/Schedule';
 import Action from './models/Action';
 import {AutoschedulerModel} from './models/Model';
 
@@ -118,7 +118,7 @@ class Create extends CRUD {
                                                         WHERE sta.schedule_template_id = ${currentScheduleTemplate.id}
                                                         ORDER BY sta.order_num`);
         // const schedule = new Schedule(templateActions, currentScheduleTemplate.id, currentScheduleTemplate.name);
-        const schedule = new Schedule({tasks: templateActions, templateId: currentScheduleTemplate.id, name: currentScheduleTemplate.name, driver: this.driver});
+        const schedule = new Schedule({actions: templateActions, templateId: currentScheduleTemplate.id, name: currentScheduleTemplate.name, driver: this.driver});
         await schedule.save();
         // Link the schedule to the current decisiion
         schedule.template = currentScheduleTemplate;
@@ -170,7 +170,7 @@ export class Update extends CRUD {
                 const actions = await this.parent.retrieve.related.actions();
                 if (options.moveTo > actions.length || options.moveTo < 0)
                     throw new Error('Attempting to move the action out of bounds.');
-                // Put set the order_num of the task to its position
+                // Put set the order_num of the action to its position
                 const currentTemplate = await this.parent.retrieve.current.template();
                 // Pluck the action from actionAt;
                 const plucked = actions.splice(Number(options.actionAt) - 1, 1);

@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const ChecklistBuilder_1 = require("./builders/ChecklistBuilder");
+const Checklist_1 = require("./models/Checklist");
 class BaseMessenger {
     constructor(options) {
         this.msg = '';
@@ -9,6 +11,9 @@ class BaseMessenger {
             this.currentTemplate = options.currentTemplate;
     }
     message() { }
+    formalitize(content) {
+        return `${this.greeting}\n\n${content}\n\n${this.farewell}`;
+    }
 }
 exports.BaseMessenger = BaseMessenger;
 class CreateTemplateMessenger extends BaseMessenger {
@@ -57,6 +62,35 @@ class PrepMessenger extends BaseMessenger {
     }
 }
 exports.PrepMessenger = PrepMessenger;
+class RetrieveChecklistActionsMessenger extends BaseMessenger {
+    async message() {
+        // Get the current checklist
+        const cl = await new Checklist_1.default().getCurrentChecklist();
+        // Get the actions related to the checklist
+        const as = await cl.getActions();
+        // Put them into a nicely formatted string.
+        this.msg = `For checklist, '${cl.name}', you have these actions:`;
+        this.msg += `\n-------`;
+        for (let i = 0; i < as.length; i++) {
+            const a = as[i];
+            this.msg += `\n  ${a.order_num} - ${a.name} for ${a.duration} mins`;
+        }
+        this.msg += `\n-------`;
+        return this.formalitize(this.msg);
+    }
+}
+exports.RetrieveChecklistActionsMessenger = RetrieveChecklistActionsMessenger;
+class CreateChecklistMessenger extends BaseMessenger {
+    constructor(options) {
+        super();
+        this.name = options.name;
+    }
+    async message() {
+        await ChecklistBuilder_1.default.create({ name: this.name });
+        return `Checklist, '${this.name}', created`;
+    }
+}
+exports.CreateChecklistMessenger = CreateChecklistMessenger;
 class RetrieveTemplateMessenger extends BaseMessenger {
     async message() {
         this.msg += this.greeting;

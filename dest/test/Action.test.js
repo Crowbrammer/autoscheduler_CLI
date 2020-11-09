@@ -4,7 +4,7 @@ const PQuery = require('prettyquery');
 
 const Action = require(__dirname + '/../models/Action').default;
 
-describe('Action Model', function () {
+describe('Action RUDs', function () {
     let pQuery;
     before(async function () {
         pQuery = new PQuery({user: process.env.DB_USER, password: process.env.DB_PASSWORD, db: process.env.DATABASE});

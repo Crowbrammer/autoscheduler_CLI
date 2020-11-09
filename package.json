@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "node node_modules/mocha/bin/mocha",
-    "test-as": "mocha -g Autoscheduler.test.js"
+    "test-as": "mocha -g Autoscheduler.test.js",
+    "migrate-lite": "node dest/db/sqlite/m_create_tables.js"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +17,8 @@
     "sql-escape": "^1.0.1",
     "sqlite": "^4.0.15",
     "sqlite3": "^5.0.0",
-    "xterm": "^4.9.0"
+    "xterm": "^4.9.0",
+    "zero-fill": "^2.2.4"
   },
   "devDependencies": {
     "chai": "^4.2.0",

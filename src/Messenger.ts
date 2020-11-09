@@ -1,3 +1,6 @@
+import ChecklistBuilder from "./builders/ChecklistBuilder";
+import Checklist from './models/Checklist';
+
 export interface Messenger {
     message(updated?);
 }
@@ -10,6 +13,9 @@ export class BaseMessenger implements Messenger {
         if (options) this.currentTemplate = options.currentTemplate;
     }
     message() {}
+    formalitize(content: string) {
+        return `${this.greeting}\n\n${content}\n\n${this.farewell}`;
+    }
     greeting: string = '\nThank you for using the Autoscheduler.';
     farewell: string = 'Thank you again for using the autoscheduler. Have a nice day!';
 }
@@ -61,6 +67,37 @@ export class PrepMessenger extends BaseMessenger {
     
     async message() {
         
+    }
+}
+
+export class RetrieveChecklistActionsMessenger extends BaseMessenger {
+    async message() {
+        // Get the current checklist
+        const cl = await new Checklist().getCurrentChecklist();
+        // Get the actions related to the checklist
+        const as = await cl.getActions();
+        // Put them into a nicely formatted string.
+        this.msg = `For checklist, '${cl.name}', you have these actions:`
+        this.msg += `\n-------`
+        for (let i = 0; i < as.length; i++) {
+            const a = as[i];
+            this.msg += `\n  ${a.order_num} - ${a.name} for ${a.duration} mins`;
+        }
+        this.msg += `\n-------`;
+        return this.formalitize(this.msg);
+    }
+}
+
+export class CreateChecklistMessenger extends BaseMessenger {
+    name: string;
+    constructor(options) {
+        super();
+        this.name = options.name;
+    }
+
+    async message() {
+        await ChecklistBuilder.create({name: this.name});
+        return `Checklist, '${this.name}', created`;
     }
 }
 

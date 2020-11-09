@@ -32,8 +32,8 @@ class Schedule {
         event.start.posix = startTime;
         event.start.dateTime = new Date(event.start.posix).toISOString();
         event.start.SQLDateTime = this.toSQLDateString(event.start.dateTime);
-        console.log(event.start.SQLDateTime);
-        console.log(event.start.dateTime.slice(0, 10), event.start.dateTime.slice(11, 19));
+        // console.log(event.start.SQLDateTime);
+        // console.log(event.start.dateTime.slice(0, 10), event.start.dateTime.slice(11, 19));
         event.start.time = new Date(event.start.posix).toLocaleTimeString();
         event.end = {};
         event.end.posix = startTime + task.duration * 60 * 1000;

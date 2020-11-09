@@ -6,7 +6,7 @@ export default async function up(pQuery: any, loud: boolean): Promise<void> {
     if (loud) console.log('Migrating for actions');
     await pQuery.query('CREATE TABLE actions (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), duration INTEGER, date_created DATETIME DEFAULT (NOW()), date_updated DATETIME DEFAULT (NOW()));');
     if (loud) console.log('Migrating for schedule_templates');
-    await pQuery.query('CREATE TABLE schedule_templates (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
+    await pQuery.query('CREATE TABLE schedule_templates (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()), is_deleted BOOLEAN );');
     if (loud) console.log('Migrating for purposes');
     await pQuery.query('CREATE TABLE purposes (id INTEGER PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (NOW()), date_last_used DATETIME DEFAULT (NOW()) );');
     if (loud) console.log('Migrating for outcomes');
