@@ -1,23 +1,30 @@
 import ChecklistBuilder from "./builders/ChecklistBuilder";
-import Checklist from './models/Checklist';
+import ScheduleBuilder  from "./builders/ScheduleBuilder";
+import Checklist        from './models/Checklist';
+import Schedule         from "./models/Schedule";
+import Template         from "./models/Template";
 
 export interface Messenger {
     message(updated?);
 }
 
-export class BaseMessenger implements Messenger {
+export abstract class BaseMessenger implements Messenger {
+
     static autoscheduler;
-    msg: string = '';
     currentTemplate;
+    msg:      string = '';
+    greeting: string = '\nThank you for using the Autoscheduler.';
+    farewell: string = 'Thank you again for using the autoscheduler. Have a nice day!';
+
     constructor(options?) {
         if (options) this.currentTemplate = options.currentTemplate;
     }
+
     message() {}
+
     formalitize(content: string) {
         return `${this.greeting}\n\n${content}\n\n${this.farewell}`;
     }
-    greeting: string = '\nThank you for using the Autoscheduler.';
-    farewell: string = 'Thank you again for using the autoscheduler. Have a nice day!';
 }
 
 export class CreateTemplateMessenger extends BaseMessenger {
@@ -70,6 +77,20 @@ export class PrepMessenger extends BaseMessenger {
     }
 }
 
+export class RetrieveScheduleMessenger extends BaseMessenger {
+    
+    async message() {
+        // Pull the current schedule, unless a specific one is noted
+        const s = new Schedule({templateId: 1});
+        await s.getCurrentSchedule();
+        // Piece the events together piece by piece in this message
+        const es = await s.getEvents();
+        // Return the nice string.
+        console.log(es);
+        return '11:11 22:22 33:33 44:44 Foo Bar Bay Bor'
+    }
+}
+
 export class RetrieveChecklistActionsMessenger extends BaseMessenger {
     async message() {
         // Get the current checklist
@@ -119,18 +140,16 @@ export class RetrieveTemplateMessenger extends BaseMessenger {
 
 class ScheduleMessenger extends BaseMessenger {
     schedule: any;
-    buildScheduleMessage() {
-        this.msg += `${this.greeting}`;
-        this.msg += `\n\nSchedule created for the template named '${this.schedule.template.name}'.`;
+    buildScheduleMessage(t: string) {
+        this.msg += `\n\nSchedule code-named: '${this.schedule.name}'.`;
         this.msg += `\n------`;
-        this.msg += `\n${this.schedule.events[0].start.time}`
+        this.msg += `\n${this.schedule.events[0].milStart()}`
         for (let i = 0; i < this.schedule.events.length; i++) {
             const event = this.schedule.events[i];
             this.msg += `\n ${i + 1}. ${event.summary}`;
-            this.msg += `\n${event.end.time}`;
+            this.msg += `\n${event.milEnd()}`;
         }
         this.msg += `\n------`;
-        return this.msg += `\n\n${this.farewell}`
     }
 }
 
@@ -184,7 +203,11 @@ export class ReorderActionsMessenger extends BaseMessenger {
 
 export class CreateScheduleMessenger extends ScheduleMessenger {
     async message() {
-        this.schedule = await BaseMessenger.autoscheduler.create.schedule();
-        return this.buildScheduleMessage();
+        // this.schedule = await BaseMessenger.autoscheduler.create.schedule();
+        const t = new Template();
+        await t.getCurrentTemplate();
+        this.schedule = await ScheduleBuilder.create({templateId: t.id, name: t.name, setAsCurrent: true});
+        console.log(this.schedule);
+        return this.msg = this.formalitize(this.buildScheduleMessage());
     }
 }

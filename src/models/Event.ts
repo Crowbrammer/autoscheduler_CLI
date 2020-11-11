@@ -2,6 +2,9 @@ import { AutoschedulerModel } from "./Model";
 const zeroFill = require('zero-fill');
 
 export default class Event extends AutoschedulerModel {
+    end;
+    start;
+    summary;
     constructor(options) {
         super(options);
         if (!options) options = {};
@@ -19,12 +22,12 @@ export default class Event extends AutoschedulerModel {
     milStart() {
         if (!this.start)
             throw new Error('Need to substantiate the start property before getting military time.');
-        return this.milTime(this.start);
+        return this.milTime(new Date(this.start));
     }
     
     milEnd() {
         if (!this.end)
            throw new Error('Need to substantiate the end property before getting military time.');
-        return this.milTime(this.end);
+        return this.milTime(new Date(this.end));
     }
 }

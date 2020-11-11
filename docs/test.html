@@ -1,0 +1,519 @@
+    <section class="suite">
+      <h1>Builders build</h1>
+      <dl>
+        <section class="suite">
+          <h1>Creates (builds) an an action</h1>
+          <dl>
+            <dt>Has an actions table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;actions\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Returns an Action object</dt>
+            <dd><pre><code>async function () {
+            const a = await ActionBuilder.create({name: &#x27;Foo&#x27;, duration: 69})
+            expect(a.constructor.name).to.equal(&#x27;Action&#x27;);
+            expect(a.id).to.be.a(&#x27;number&#x27;);
+            expect(a.name).to.equal(&#x27;Foo&#x27;);
+            expect(a.duration).to.equal(69);
+        }</code></pre></dd>
+            <dt>adds an entry in the actions table</dt>
+            <dd><pre><code>async function() {
+            // Check the db for the num of entries
+            const numCLEntriesBefore = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM actions&#x27;))[0].ct;
+            // Add the checklist
+            await ActionBuilder.create({name: &#x27;Foo&#x27;, duration: 69});
+            // Check the db for the num of entries. Did it increase by one?
+            const numCLEntriesAfter = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM actions&#x27;))[0].ct;
+            expect(numCLEntriesAfter).to.equal(numCLEntriesBefore + 1);
+        }</code></pre></dd>
+            <dt>throws an error for not having a duration</dt>
+            <dd><pre><code>async function () {
+            const err = await ActionBuilder.create({name: &#x27;Foo&#x27;}).catch(err =&#x3E; err);
+            expect(err.message).to.equal(&#x27;Add a duration to build an Action.&#x27;);
+        }</code></pre></dd>
+            <dt>throws an error for not having a name</dt>
+            <dd><pre><code>async function () {
+            const err = await ActionBuilder.create({duration: 69}).catch(err =&#x3E; err);
+            expect(err.message).to.equal(&#x27;Add a name to build an Action.&#x27;);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Creates (builds) a checklist</h1>
+          <dl>
+            <dt>Has a checklists table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;checklists\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Returns a Checklist object (id and name)</dt>
+            <dd><pre><code>async function () {
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;})
+            expect(cl.constructor.name).to.equal(&#x27;Checklist&#x27;);
+            expect(cl.name).to.equal(&#x27;Foo&#x27;);
+        }</code></pre></dd>
+            <dt>adds a checklist entry in the db</dt>
+            <dd><pre><code>async function() {
+            // Check the db for the num of entries
+            const numCLEntriesBefore = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM checklists&#x27;))[0].ct;
+            // Add the checklist
+            await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Check the db for the num of entries. Did it increase by one?
+            const numCLEntriesAfter = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM checklists&#x27;))[0].ct;
+            expect(numCLEntriesAfter).to.equal(numCLEntriesBefore + 1);
+        }</code></pre></dd>
+            <dt>throws an error for not having a name</dt>
+            <dd><pre><code>async function () {
+            const err = await ChecklistBuilder.create({}).catch(err =&#x3E; err);
+            expect(err.message).to.equal(&#x27;Add a name to build a Checklist.&#x27;);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Creates (builds) a schedule_template</h1>
+          <dl>
+            <dt>Has a schedule_templates table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedule_templates\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Returns a Template object (id and name)</dt>
+            <dd><pre><code>async function () {
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;})
+            expect(t.constructor.name).to.equal(&#x27;Template&#x27;);
+            expect(t.name).to.equal(&#x27;Foo&#x27;);
+        }</code></pre></dd>
+            <dt>adds a schedule_template entry in the db</dt>
+            <dd><pre><code>async function() {
+            // Check the db for the num of entries
+            const numTemplateEntriesBefore = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM schedule_templates&#x27;))[0].ct;
+            // Add the schedule_template
+            await TemplateBuilder.create({name: &#x27;Foo&#x27;, templateId: 1});
+            // Check the db for the num of entries. Did it increase by one?
+            const numTemplateEntriesAfter = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM schedule_templates&#x27;))[0].ct;
+            expect(numTemplateEntriesAfter).to.equal(numTemplateEntriesBefore + 1);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Creates (builds) a schedule</h1>
+          <dl>
+            <dt>Has a schedules table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedules\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Returns a Schedule object (id and name)</dt>
+            <dd><pre><code>async function () {
+            // Create a few Actions
+            const actions = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 5}), await ActionBuilder.create({name: &#x27;Bay&#x27;, duration: 10}), await ActionBuilder.create({name: &#x27;Bor&#x27;, duration: 15})];
+            // Run the builder with a name and the actiosn, mn
+            const s = await ScheduleBuilder.create({name: &#x27;Foo&#x27;, actions, templateId: 1});
+            // Expect it to return a schedule object with its name                                                              
+            expect(s.constructor.name).to.equal(&#x27;Schedule&#x27;);
+            expect(s.name).to.equal(&#x27;Foo&#x27;);
+            // Expect it to have three event objects
+            expect(s.events.length).to.equal(3);
+            expect(s.events.every(e =&#x3E; e.constructor.name === &#x27;Event&#x27;)).to.be.true;
+        }</code></pre></dd>
+            <dt>Has events with accurate datetimes</dt>
+            <dd><pre><code>async function () {
+            // Create three actions of durations, five, ten, and fifteen minutes.
+            const actions = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 5}), await ActionBuilder.create({name: &#x27;Bay&#x27;, duration: 10}), await ActionBuilder.create({name: &#x27;Bor&#x27;, duration: 15})];
+            // Run the create method
+            const s = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;, 
+                                                    actions});
+            // Get the current Datetime
+            const cdt = Date.now();
+            // In the Schedule object
+            // expect the first event&#x27;s start to be within 2 minutes of the current Datetime 
+            expect(s.startTime).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
+            expect(s.events.shift().start.posix).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
+            // expect the last event&#x27;s end to be within 2 minutes of thirty minutes from the current Datetime 
+            expect(s.events.pop().end.posix).to.be.within(addMins(cdt, 30-2), addMins(cdt, 30+2));
+            
+            // In the db: 
+            const es = await sqliteInstance.query(&#x60;SELECT * FROM schedule_events se INNER JOIN events e ON se.event_id = e.id WHERE se.schedule_id = ${s.id};&#x60;);
+            // Get the first connected event from the db
+            const firstEvent = es.shift().start
+            // // expect the first event&#x27;s start to be within 2 minutes of the current Datetime 
+            expect(new Date(firstEvent).getTime()).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
+            // // Get the last connected event from the db
+            const lastEvent = es.pop().end;
+            // // expect the last event&#x27;s end to be within 2 minutes of thirty minutes from the current Datetime 
+            expect(new Date(lastEvent).getTime()).to.be.within(addMins(cdt, 30-2), addMins(cdt, 30+2));
+            function addMins(dt, mins) {
+                return dt + 1000 * 60 * mins;
+            }
+        }</code></pre></dd>
+            <dt>Makes the schedule current on creation if marked</dt>
+            <dd><pre><code>async function () {
+            // Two schedules; One with the flag and one without.
+            const s0 = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;, isCurrent: true});
+            const s = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;, isCurrent: false});
+            // Expect one to be current and the other not. 
+            expect(await s0.isCurrent()).to.be.true;
+            expect(await s.isCurrent()).to.be.false;
+        }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>Wield the Models</h1>
+      <dl>
+        <dt>Returns a string with the name checklist</dt>
+        <dd><pre><code>async function () {
+        // Create the CreateChecklist controllor
+        const ccc = new CreateChecklistMessenger({name: &#x27;Foo&#x27;});
+        // Invoke the message element
+        const msg = await ccc.message();
+        // Check if it has the checklist&#x27;s name in it
+        expect(msg).to.contain(&#x27;Foo&#x27;);
+    }</code></pre></dd>
+        <dt>Creates a checklist</dt>
+        <dd><pre><code>async function () {
+        // Check the number of checklists, remember it 
+        const numChecklistsBefore = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM checklists&#x27;))[0].ct;
+        // Create a CreateChecklistMessenger
+        const ccc = new CreateChecklistMessenger({name: &#x27;Woof&#x27;});
+        // Invoke the message
+        const msg = await ccc.message();
+        // Check the number of checklists. 
+        const numChecklistsAfter = (await sqliteInstance.query(&#x27;SELECT COUNT(*) ct FROM checklists&#x27;))[0].ct;
+        // Expect it to have one more.
+        expect(numChecklistsAfter).to.equal(numChecklistsBefore + 1);
+    }</code></pre></dd>
+        <dt>Shows actions related to the current checklist</dt>
+        <dd><pre><code>async function () {
+        // Create a checklist.
+        const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+        // Mark it as current.
+        await cl.markAsCurrent();
+        // Create actions.
+        const actions = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420}), await ActionBuilder.create({name: &#x27;Bay&#x27;, duration: 69}), await ActionBuilder.create({name: &#x27;Bor&#x27;, duration: 1})];
+        // Link &#x27;em
+        for (let i = 0; i &#x3C; actions.length; i++) {
+            const action = actions[i];
+            await cl.link(action);
+        }
+        // Create the RetrieveChecklistActionsMessenger
+        const rclam = new RetrieveChecklistActionsMessenger();
+        // Invoke its message
+        // Expect the message to have the names of the checklist and the actions
+        const msg = await rclam.message();
+        expect(msg).to.contain(cl.name);
+        expect(msg).to.contain(actions[0].name);
+        expect(msg).to.contain(actions[1].name);
+        expect(msg).to.contain(actions[2].name);
+    }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>Model RUDs and links</h1>
+      <dl>
+        <section class="suite">
+          <h1>Action Model RUDs and links</h1>
+          <dl>
+            <dt>Has an actions table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;actions\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Template Model RUDs and links</h1>
+          <dl>
+            <dt>Has a schedule_templates table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedule_templates\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Sets the id and name of the current checklist object to match the current checklist</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist, mn
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;});
+            // Mark it as current
+            await t.markAsCurrent();
+            // Without the builder, create a Template object
+            const freshTemplate = new Template();
+            // Invoke getCurrentTemplate
+            await freshTemplate.getCurrentTemplate();
+            // Check that its id and name matches the current Cl&#x27;s id and name
+            expect(freshTemplate.id).to.equal(t.id);
+            expect(freshTemplate.name).to.equal(t.name);
+        }</code></pre></dd>
+            <dt>returns the link or null</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule_template and store its id
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;});
+            // Create two actions and store its id
+            const a = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 69}), await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420})];
+            // Create a linking entry between the CL and one action
+            await sqliteInstance.query(&#x60;INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${t.id}, ${a[0].id})&#x60;);
+            // null if not
+            expect(await t.checkLink(a[1])).to.be.null;
+            // It should return a query result if exists
+            const link = await t.checkLink(a[0]);
+            expect(link.schedule_template_id).to.be.a(&#x27;number&#x27;);
+            expect(link.action_id).to.be.a(&#x27;number&#x27;);
+        }</code></pre></dd>
+            <dt>It connects the schedule_template to the action</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule_template and store its id
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;});
+            // Create a few actions
+            const actions = [];
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 69}));
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420}));
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 1}));
+    
+            // Run the linking functions
+            for (let i = 0; i &#x3C; actions.length; i++) {
+                const action = actions[i];
+                await t.link(action); // Pass an object because it can link to different things: Actions, outcomes, schedules(?).
+                // Check that they&#x27;re linked
+                const link = await t.checkLink(action);
+                expect(link).to.have.property(&#x27;schedule_template_id&#x27;);
+                expect(link).to.have.property(&#x27;action_id&#x27;);
+                expect(link).to.have.property(&#x27;order_num&#x27;);
+                // expect(await cl.checkLink(action)).to.have.all.keys(&#x27;schedule_template_id&#x27;, &#x27;action_id&#x27;, &#x27;order_num&#x27;);
+            }
+        }</code></pre></dd>
+            <dt>Pulls actions related to the schedule_template</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule_template
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;});
+            // Create a few actions
+            const actions = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420}), await ActionBuilder.create({name: &#x27;Bay&#x27;, duration: 69}), await ActionBuilder.create({name: &#x27;Bor&#x27;, duration: 1})];
+            // Link &#x27;em
+            for (let i = 0; i &#x3C; actions.length; i++) {
+                const action = actions[i];
+                await t.link(action);
+            }
+            // Use the function
+            const attemptedTemplateActionPull = await t.getActions();
+            // Check that it returns the action names (don&#x27;t worry about the order).
+            expect(attemptedTemplateActionPull.map(action =&#x3E; action.name)).to.include.members([&#x27;Bar&#x27;, &#x27;Bay&#x27;, &#x27;Bor&#x27;]);
+            expect(attemptedTemplateActionPull.map(action =&#x3E; action.duration)).to.include.members([420, 69, 1]);
+        }</code></pre></dd>
+            <dt>Makes the schedule_template the current one</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule_template, mn (mnemonic -&#x3E; remember it -&#x3E; store it in a variable)
+            const t = await TemplateBuilder.create({name: &#x27;Foo&#x27;});
+            // Invoke markAsCurrent()
+            await t.markAsCurrent();
+            // Pull the current schedule_templates, mn
+            const pulledTemplates = await sqliteInstance.query(&#x60;SELECT id FROM schedule_templates WHERE is_current = true;&#x60;);
+            // Expect the pull to be an array of length 1
+            expect(pulledTemplates.length).to.equal(1);
+            // Expect the entry in that array to have the same id as the schedule_template
+            expect(pulledTemplates[0].id).to.equal(t.id);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Schedule Model RUDs and links</h1>
+          <dl>
+            <dt>Has a schedules table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedules\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Has a schedule_events table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedule_events\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>returns the link or null</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule and store its id
+            const s = await ScheduleBuilder.create({name: &#x27;Foo&#x27;, templateId: 1});
+            // Create two events and store its id
+            const start = &#x27;2020-11-09 15:15:15&#x27;;
+            const end   = &#x27;2020-11-09 23:15:15&#x27;;
+            const es = [await EventBuilder.create({summary: &#x27;Bar&#x27;, start, end}), await EventBuilder.create({summary: &#x27;Bar&#x27;, start, end})];
+            // Create a linking entry between the CL and one event
+            await sqliteInstance.query(&#x60;INSERT INTO schedule_events (schedule_id, event_id) VALUES (${s.id}, ${es[0].id})&#x60;);
+            // null if not
+            expect(await s.checkLink(es[1])).to.be.null;
+            // It should return a query result if exists
+            const link = await s.checkLink(es[0]);
+            expect(link.schedule_id).to.be.a(&#x27;number&#x27;);
+            expect(link.event_id).to.be.a(&#x27;number&#x27;);
+        }</code></pre></dd>
+            <dt>It connects the schedule to the event</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule and store its id
+            const s = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;});
+            // Create a few events
+            const events = [];
+            events.push(await EventBuilder.create({summary: &#x27;Bar&#x27;, duration: 69}));
+            events.push(await EventBuilder.create({summary: &#x27;Bar&#x27;, duration: 420}));
+            events.push(await EventBuilder.create({summary: &#x27;Bar&#x27;, duration: 1}));
+    
+            // Run the linking functions
+            for (let i = 0; i &#x3C; events.length; i++) {
+                const event = events[i];
+                await s.link(event); // Pass an object because it can link to different things: Events, outcomes, schedules(?).
+                // Check that they&#x27;re linked
+                const link = await s.checkLink(event);
+                expect(link).to.have.property(&#x27;schedule_id&#x27;);
+                expect(link).to.have.property(&#x27;event_id&#x27;);
+                expect(link).to.have.property(&#x27;order_num&#x27;);
+            }
+        }</code></pre></dd>
+            <dt>Pulls events related to the schedule</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule
+            const s = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;});
+            // Create a few events
+            const start = &#x27;2020-11-09 15:15:15&#x27;;
+            const end   = &#x27;2020-11-09 23:15:15&#x27;;
+            const es = [await EventBuilder.create({summary: &#x27;Bar&#x27;, start, end}), await EventBuilder.create({summary: &#x27;Bor&#x27;, start, end}), await EventBuilder.create({summary: &#x27;Bay&#x27;, start, end})];
+            // Link &#x27;em
+            for (let i = 0; i &#x3C; es.length; i++) {
+                const event = es[i];
+                await s.link(event);
+            }
+            // Use the function
+            const attemptedClEventPull = await s.getEvents();
+            // Check that it returns the event names (don&#x27;t worry about the order).
+            expect(attemptedClEventPull.map(event =&#x3E; event.summary)).to.include.members([&#x27;Bar&#x27;, &#x27;Bay&#x27;, &#x27;Bor&#x27;]);
+            expect(attemptedClEventPull.every(e =&#x3E; e.constructor.name === &#x27;Event&#x27;)).to.be.true;
+        }</code></pre></dd>
+            <dt>Tells me if it&#x27;s current or not</dt>
+            <dd><pre><code>async function () {
+            // Create two schedules. Mark one as current.
+            const s0 = await ScheduleBuilder.create({name: &#x27;Whoa&#x27;, templateId: 1});
+            await s0.markAsCurrent();
+            const s = await ScheduleBuilder.create({name: &#x27;Whoa&#x27;, templateId: 1});
+            // Run the function. Expect one to be true, the other false.
+            expect(await s0.isCurrent()).to.be.true;
+            expect(await s.isCurrent()).to.be.false;
+        }</code></pre></dd>
+            <dt>Sets the id and name of the current Schedule object to match the current schedule</dt>
+            <dd><pre><code>async function () {
+            // Create a schedule, mn
+            const s = await ScheduleBuilder.create({templateId: 1, name: &#x27;Foo&#x27;});
+            // Mark it as current
+            await s.markAsCurrent();
+            // Without the builder, create a Schedule object
+            const freshSchedule = new Schedule({templateId: 1});
+            // Invoke getCurrentSchedule
+            await freshSchedule.getCurrentSchedule();
+            // Check that its id and name matches the current S&#x27;s id and name
+            expect(freshSchedule.id).to.equal(s.id);
+            expect(freshSchedule.name).to.equal(s.name);
+            expect(freshSchedule.events.length).to.equal(s.events.length);
+        }</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Event Model RUDs and links</h1>
+          <dl>
+            <dt>Has a events table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;events\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Has a schedule_events table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;schedule_events\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Shows the start and end in military time</dt>
+            <dd><pre><code>// Expect that it converts it to mil time.
+const e = new Event({start: new Date(&#x27;2020-11-09T18:26:15.000Z&#x27;), end: new Date(&#x27;2020-11-09T18:36:15.000Z&#x27;)});
+expect(e.milStart()).to.equal(&#x27;13:26&#x27;);
+expect(e.milEnd()).to.equal(&#x27;13:36&#x27;);</code></pre></dd>
+          </dl>
+        </section>
+        <section class="suite">
+          <h1>Checklist Model RUDs and links</h1>
+          <dl>
+            <dt>Has a checklists table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;checklists\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>Has a checklist_actions table</dt>
+            <dd><pre><code>async function () {
+            expect((await sqliteInstance.query(&#x27;SELECT * FROM sqlite_master WHERE name = \&#x27;checklist_actions\&#x27;;&#x27;)).length).to.equal(1);
+        }</code></pre></dd>
+            <dt>returns the link or null</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist and store its id
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Create two actions and store its id
+            const a = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 69}), await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420})];
+            // Create a linking entry between the CL and one action
+            await sqliteInstance.query(&#x60;INSERT INTO checklist_actions (checklist_id, action_id) VALUES (${cl.id}, ${a[0].id})&#x60;);
+            // null if not
+            expect(await cl.checkLink(a[1])).to.be.null;
+            // It should return a query result if exists
+            const link = await cl.checkLink(a[0]);
+            expect(link.checklist_id).to.be.a(&#x27;number&#x27;);
+            expect(link.action_id).to.be.a(&#x27;number&#x27;);
+        }</code></pre></dd>
+            <dt>It connects the checklist to the action</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist and store its id
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Create a few actions
+            const actions = [];
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 69}));
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420}));
+            actions.push(await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 1}));
+    
+            // Run the linking functions
+            for (let i = 0; i &#x3C; actions.length; i++) {
+                const action = actions[i];
+                await cl.link(action); // Pass an object because it can link to different things: Actions, outcomes, schedules(?).
+                // Check that they&#x27;re linked
+                const link = await cl.checkLink(action);
+                expect(link).to.have.property(&#x27;checklist_id&#x27;);
+                expect(link).to.have.property(&#x27;action_id&#x27;);
+                expect(link).to.have.property(&#x27;order_num&#x27;);
+                // expect(await cl.checkLink(action)).to.have.all.keys(&#x27;checklist_id&#x27;, &#x27;action_id&#x27;, &#x27;order_num&#x27;);
+            }
+        }</code></pre></dd>
+            <dt>Pulls actions related to the checklist</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Create a few actions
+            const actions = [await ActionBuilder.create({name: &#x27;Bar&#x27;, duration: 420}), await ActionBuilder.create({name: &#x27;Bay&#x27;, duration: 69}), await ActionBuilder.create({name: &#x27;Bor&#x27;, duration: 1})];
+            // Link &#x27;em
+            for (let i = 0; i &#x3C; actions.length; i++) {
+                const action = actions[i];
+                await cl.link(action);
+            }
+            // Use the function
+            const attemptedClActionPull = await cl.getActions();
+            // Check that it returns the action names (don&#x27;t worry about the order).
+            expect(attemptedClActionPull.map(action =&#x3E; action.name)).to.include.members([&#x27;Bar&#x27;, &#x27;Bay&#x27;, &#x27;Bor&#x27;]);
+            expect(attemptedClActionPull.map(action =&#x3E; action.duration)).to.include.members([420, 69, 1]);
+        }</code></pre></dd>
+            <dt>Makes the checklist the current one</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist, mn (mnemonic -&#x3E; remember it -&#x3E; store it in a variable)
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Invoke markAsCurrent()
+            await cl.markAsCurrent();
+            // Pull the current checklists, mn
+            const pulledCls = await sqliteInstance.query(&#x60;SELECT id FROM checklists WHERE is_current = true;&#x60;);
+            // Expect the pull to be an array of length 1
+            expect(pulledCls.length).to.equal(1);
+            // Expect the entry in that array to have the same id as the checklist
+            expect(pulledCls[0].id).to.equal(cl.id);
+        }</code></pre></dd>
+            <dt>Sets the id and name of the current checklist object to match the current checklist</dt>
+            <dd><pre><code>async function () {
+            // Create a checklist, mn
+            const cl = await ChecklistBuilder.create({name: &#x27;Foo&#x27;});
+            // Mark it as current
+            await cl.markAsCurrent();
+            // Without the builder, create a Checklist object
+            const freshCl = new Checklist();
+            // Invoke getCurrentChecklist
+            await freshCl.getCurrentChecklist();
+            // Check that its id and name matches the current Cl&#x27;s id and name
+            expect(freshCl.id).to.equal(cl.id);
+            expect(freshCl.name).to.equal(cl.name);
+        }</code></pre></dd>
+          </dl>
+        </section>
+      </dl>
+    </section>

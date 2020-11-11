@@ -3,9 +3,12 @@ const { open } = require('sqlite');
 const { expect } = require('chai');
 const { default: Builder } = require('../../builders/Builder')
 const { AutoschedulerModel } = require('../../models/Model');
-const { CreateChecklistMessenger, RetrieveChecklistActionsMessenger } = require('../../Messenger');
+const { CreateChecklistMessenger, RetrieveChecklistActionsMessenger,
+        RetrieveScheduleMessenger } = require('../../Messenger');
 const { default: ChecklistBuilder } = require('../../builders/ChecklistBuilder');
 const { default: ActionBuilder } = require('../../builders/ActionBuilder');
+const { default: TemplateBuilder } = require('../../builders/TemplateBuilder');
+const { default: ScheduleBuilder } = require('../../builders/ScheduleBuilder');
 
 describe('Wield the Models', async function() {
     let sqliteInstance;
@@ -79,17 +82,33 @@ describe('Wield the Models', async function() {
     // After: RetrieveScheduleMessenger...message
     // Then: 
     xit('displays the schedule name and accurate events and time', async function () {
+        expect(false).to.equal(true, 'Something\'s up with the current...')
         // Create a template
         const t = await TemplateBuilder.create({name: 'Foo'});
         // Set it as current
         await t.markAsCurrent();
         // Create three actions
         const actions = [await ActionBuilder.create({name: 'Bar', duration: 5}), await ActionBuilder.create({name: 'Bay', duration: 10}), await ActionBuilder.create({name: 'Bor', duration: 15})];
-        const s = await ScheduleBuilder.create({name: 'Foo', actions, templateId: t.id});
         // Link 'em
+        for (let i = 0; i < actions.length; i++) {
+            const a = actions[i];
+            await t.link(a);
+        }
+        
         // Create a schedule (from the current template)
+        const s = await ScheduleBuilder.create({name: 'Foo', actions, templateId: t.id, isCurrent: true});
+        // RetrieveScheduleMessenger...message
+        const rsm = new RetrieveScheduleMessenger();
+        const msg = await rsm.message();
         // \d\d:\d\d should be found six times
+        // expect(/\d\d:\d\d/g.exec(msg).length).to.equal(4);
+        expect(msg.match(/\d\d:\d\d/g).length).to.equal(4);
         // The template name and action names should be in there. 
+        expect(msg).to.contain(t.name);
+        for (let i = 0; i < actions.length; i++) {
+            const a = actions[i];
+            expect(msg).to.contain(a.name);
+        }
     })
 
 });

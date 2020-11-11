@@ -1,43 +1,60 @@
+import Action from "./Action";
 import { AutoschedulerModel } from "./Model";
 
 export default class Template extends AutoschedulerModel{
 
     name: string | void;
     id: number | void;
-    constructor(options) {
+    constructor(options?) {
         super();
         if (!options) options = {};
         this.name = options.name || '';
         this.id = options.id;
     }
 
-    async checkLink(obj) {
+    async hasLinkWith(obj) {
+        if (!this.id) 
+          throw new Error('Attach an id to this Template object check for links.');
+        if (!obj.id) 
+          throw new Error('Attach an id to the object for which you\'re checking for links.');
         switch (obj.constructor.name) {
-            case 'Action':
-                const link = await this.driver.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${this.id} AND action_id = ${obj.id}`);
-                return link.length === 1 ? link[0] : null;
+          case 'Action':
+            // Check the schedule_events table for an entry connecting it
+            const links = await this.driver.query(`SELECT schedule_template_id, action_id, order_num FROM schedule_template_actions WHERE schedule_template_id = ${this.id} AND action_id = ${obj.id}`);
+            // If it's there (> 0), return the query;
+            // If it's not there, return null
+            return links.length > 0 ? links[0] : null;
+        
+          default:
+            break;
+        }
+      }
+
+      async link(obj) {
+            switch ( obj.constructor.name ) {
+                case 'Action':
+                    const existingLink = await this.hasLinkWith(obj);
+                    if (existingLink) {
+                        return existingLink;
+                    }
+                    
+                    await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${this.id}, ${obj.id});`);
+
+                    const link = await this.driver.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${this.id} AND action_id = ${obj.id}`);
+
+                    if (!(await this.hasLinkWith(obj))) 
+                    throw new Error('Link function not adding the link');
+                    return link.length === 1 ? link[0] : null;
         
             default:
                 break;
         }
-
-    }
-
-    async link(obj) {
-        switch (obj.constructor.name) {
-            case 'Action':
-                await this.driver.query(`INSERT INTO schedule_template_actions (schedule_template_id, action_id) VALUES (${this.id}, ${obj.id});`);
-                const link = await this.driver.query(`SELECT * FROM schedule_template_actions WHERE schedule_template_id = ${this.id} AND action_id = ${obj.id}`);
-                if (link.length === 0) throw new Error('Link function not adding the link');
-                return link.length === 1 ? link[0] : null;
-        
-            default:
-                break;
-        }
-    }
+      }
     
     async getActions() {
-        return await this.driver.query(`SELECT * FROM schedule_template_actions INNER JOIN actions WHERE schedule_template_id = ${this.id} ORDER BY order_num`);
+        const results = await this.driver.query(`SELECT * FROM schedule_template_actions sta INNER JOIN actions a ON sta.action_id = a.id WHERE schedule_template_id = ${this.id} ORDER BY order_num`);
+        const actions = results.map(r => new Action(r));
+        return actions;
     }
 
     async getCurrentTemplate() {

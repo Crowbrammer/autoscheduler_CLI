@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config({ path: __dirname + '/../../.env' });
+const dotenv_1 = require("dotenv");
+dotenv_1.config({ path: __dirname + '/../../.env' });
 class AutoschedulerModel {
     constructor(options) {
         this.driver = AutoschedulerModel.driver;

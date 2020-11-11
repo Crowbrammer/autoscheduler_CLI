@@ -20,12 +20,12 @@ class Event extends Model_1.AutoschedulerModel {
     milStart() {
         if (!this.start)
             throw new Error('Need to substantiate the start property before getting military time.');
-        return this.milTime(this.start);
+        return this.milTime(new Date(this.start));
     }
     milEnd() {
         if (!this.end)
             throw new Error('Need to substantiate the end property before getting military time.');
-        return this.milTime(this.end);
+        return this.milTime(new Date(this.end));
     }
 }
 exports.default = Event;

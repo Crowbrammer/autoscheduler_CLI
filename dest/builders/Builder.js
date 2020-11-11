@@ -21,6 +21,3 @@ class Builder {
     }
 }
 exports.default = Builder;
-// export default interface Builder {
-//     static create(any);
-// }

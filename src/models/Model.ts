@@ -1,4 +1,5 @@
-require('dotenv').config({path: __dirname + '/../../.env'});
+import { config } from 'dotenv'
+config({path: __dirname + '/../../.env'});
 
 export default interface Model {
     create();
@@ -7,18 +8,21 @@ export default interface Model {
     delete();
 }
 
-export class AutoschedulerModel implements Model {
-    id;
+export abstract class AutoschedulerModel implements Model {
     static driver;
+    id;
     driver;
     options: any;
+
     constructor(options?) {
         this.driver = AutoschedulerModel.driver;
     }
+
     create() {};
     retrieve() {};
     update() {};
     delete() {};
+    
     async insert(query) {
         switch (this.driver.constructor.name) {
             case 'Database': // SQLite

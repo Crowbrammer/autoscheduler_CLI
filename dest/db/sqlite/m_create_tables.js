@@ -37,6 +37,7 @@ class CreateTablesMigration {
             console.log(`Migrating for schedule_template_actions`);
         await this.driver.query(`CREATE TABLE schedule_template_actions (schedule_template_id INTEGER, action_id INTEGER, order_num INTEGER, \
                                                     PRIMARY KEY (schedule_template_id, action_id), \
+                                                    UNIQUE (schedule_template_id, action_id),
                                                     FOREIGN KEY (schedule_template_id) REFERENCES schedule_templates(id), \
                                                     FOREIGN KEY (action_id) REFERENCES actions(id));`);
         if (loud)

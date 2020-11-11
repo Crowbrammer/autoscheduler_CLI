@@ -13,7 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "js-date-to-sql-datetime": "^1.1.7",
+    "js-date-to-sql-datetime": "^1.2.7",
+    "pretty-easy-date-check": "^1.2.4",
     "prettyquery": "^1.8.6",
     "sql-escape": "^1.0.1",
     "sqlite": "^4.0.15",
