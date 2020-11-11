@@ -22,7 +22,8 @@
         "./src/builders/ActionBuilder.ts",
         "./src/builders/ScheduleBuilder.ts",
         "./src/builders/EventBuilder.ts",
-        "./src/db/mig_add_soft_delete.ts"
+        "./src/db/mig_add_soft_delete.ts",
+        "./src/App.ts"
     ]
 
 }

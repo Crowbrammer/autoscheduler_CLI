@@ -3,6 +3,8 @@ import ScheduleBuilder  from "./builders/ScheduleBuilder";
 import Checklist        from './models/Checklist';
 import Schedule         from "./models/Schedule";
 import Template         from "./models/Template";
+import Builder         from "./builders/Builder";
+
 
 export interface Messenger {
     message(updated?);
@@ -204,9 +206,9 @@ export class ReorderActionsMessenger extends BaseMessenger {
 export class CreateScheduleMessenger extends ScheduleMessenger {
     async message() {
         // this.schedule = await BaseMessenger.autoscheduler.create.schedule();
-        const t = new Template();
-        await t.getCurrentTemplate();
-        this.schedule = await ScheduleBuilder.create({templateId: t.id, name: t.name, setAsCurrent: true});
+        const template = new Template();
+        await template.getCurrentTemplate();
+        this.schedule = await ScheduleBuilder.create({template, setAsCurrent: true});
         console.log(this.schedule);
         return this.msg = this.formalitize(this.buildScheduleMessage());
     }

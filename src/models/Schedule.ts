@@ -4,6 +4,7 @@ import Event                  from "./Event";
 import * as toSQLDatetime     from 'js-date-to-sql-datetime';
 import Template               from './Template';
 import EventBuilder from '../builders/EventBuilder';
+import Builder from '../builders/Builder';
 
 config({path: __dirname + '/../.env'});
 
@@ -17,6 +18,8 @@ export default class Schedule extends AutoschedulerModel{
     template: Template;
     constructor(options) {
       super(options);
+      if (options.toGetCurrent)
+        return;
       this.template = options.template;
       this.start = Date.now() || options.start;
       this.name = options.template.name; 
@@ -39,38 +42,13 @@ export default class Schedule extends AutoschedulerModel{
         this.events.push(await EventBuilder.create({action, start: this.events[i-1].end}))
       }
 
-      // Set it as this Schedule object's events property.
+      for (let i = 0; i < this.events.length; i++) {
+        const event = this.events[i];
+        await this.link(event);
+      }
 
-      // Build an event with the action... using the last event 
-
-
-      // Make sure the template has its actions...
-      // Refer to the templates actions...
-      // this.events[0] = this.buildEvent(this.start, this.actions[0]);
-      // for (let i = 1; i < this.actions.length; i++) {
-      //   const action = this.actions[i];
-      //   const startPosixTime = this.events[i-1].end.posix;
-      //   const event = this.buildEvent(startPosixTime, action);
-      //   this.events.push(event);
-      // }
     }
     
-    // This should be on the EventBuilder...
-    // buildEvent(startTime, action) {
-    //   let event               = new Event();
-    //   event.start             = {};
-    //   event.start.posix       = startTime;
-    //   event.start.dateTime    = new Date(event.start.posix).toLocaleString();
-    //   event.start.time        = new Date(event.start.posix).toLocaleTimeString();
-    //   event.end               = {};
-    //   event.end.posix         = startTime + action.duration * 60 * 1000;
-    //   event.end.dateTime      = new Date(event.end.posix).toLocaleString();
-    //   event.end.time          = new Date(event.end.posix).toLocaleTimeString();
-    //   event.summary           = action.name;
-    //   event.base_action_id    = action.id;
-    //   return event;
-    // }
-
     async hasLinkWith(obj) {
       if (!this.id) 
         throw new Error('Attach an id to this Schedule object check for links.');
@@ -93,19 +71,20 @@ export default class Schedule extends AutoschedulerModel{
       const currentSchedule = await this.driver.query(`SELECT * FROM schedules WHERE is_current = true ORDER BY id DESC;`);
       if (currentSchedule.length === 0) {
           throw new Error('No schedule set as current.');
-      } else if (currentSchedule.length > 1) {
-          console.log('Multiple schedules set as current.'); // This one'll bite me later.
       } else {
-          this.id = currentSchedule[0].id;
-          this.name = currentSchedule[0].name;
-          this.templateId = currentSchedule[0].based_on_template_id;
+        if (currentSchedule.length > 1) 
+          console.log('Multiple schedules set as current.'); // This one'll bite me later.
+        this.id = currentSchedule[0].id;
+        this.name = currentSchedule[0].name;
+        this.templateId = currentSchedule[0].based_on_template_id;
+        await this.getEvents();
       }
       return this;
     }
 
     async getEvents() {
       const pulledEvents = await this.driver.query(`SELECT * FROM schedule_events se INNER JOIN events e ON se.event_id = e.id WHERE schedule_id = ${this.id} ORDER BY order_num`);
-      return pulledEvents.map(e => new Event(e));
+      return this.events = pulledEvents.map(e => new Event(e));
     }
 
     async isCurrent() {
@@ -168,52 +147,20 @@ export default class Schedule extends AutoschedulerModel{
       if (this.events.length === 0) {
         console.log('No event to display')
       } else {
-        niceDisplay = new Date(this.start).toLocaleTimeString();
+        niceDisplay = this.events[0].milStart();
         for (let i = 0; i < this.events.length; i++) {
           const event = this.events[i];
-          const eventEndTime = new Date(event.end.posix).toLocaleTimeString();
-          niceDisplay += `\n${event.summary}\n${event.end.time}`
+          niceDisplay += `\n${event.summary}\n${event.milEnd()}`
         }
       }
       return niceDisplay;
     }
-
-    async save(isCurrent: boolean) {
-      // Add all the events
-      let scheduleId;
-      if (isCurrent)
-        await AutoschedulerModel.driver.query('UPDATE schedules SET is_current = false;');
-        
-      if (AutoschedulerModel.driver.constructor.name === 'PQuery') {
-
-        scheduleId = (await AutoschedulerModel.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, ${isCurrent ? true : false});`)).insertId;
-  
-      } else {
-
-        scheduleId = (await AutoschedulerModel.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}', ${this.templateId}, ${isCurrent ? true : false});`)).lastID;
-      
-      }
-
-      for (let i = 0; i < this.events.length; i++) {
-
-        const event = this.events[i];
-        let eventId
-
-        if (AutoschedulerModel.driver.constructor.name === 'PQuery') {
-
-          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${toSQLDatetime(event.start.posix)}', '${toSQLDatetime(event.end.posix)}', ${event.base_action_id})`)).insertId;
-
-        } else {
-
-          eventId = (await AutoschedulerModel.driver.query(`INSERT INTO events (summary, start, end, base_action_id) VALUES ('${event.summary}', '${toSQLDatetime(event.start.posix)}', '${toSQLDatetime(event.end.posix)}', ${event.base_action_id})`)).lastID;
-          
-        }
-
-        await AutoschedulerModel.driver.query(`INSERT INTO schedule_events (schedule_id, event_id) VALUES (${scheduleId}, ${eventId})`);
-
-      }
-
-      this.id = scheduleId;
-      return this;
+    
+    async save(setAsCurrent) {
+      const queryResult = await this.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${this.name}' , '${this.template.id}', ${setAsCurrent ? true : false});`);
+      this.id = Builder.getInsertId(queryResult);
+      if (setAsCurrent)
+        await this.markAsCurrent();
     }
+
 }

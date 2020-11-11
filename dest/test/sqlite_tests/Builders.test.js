@@ -261,19 +261,25 @@ describe('Builders build', async function() {
             // Create three actions of durations, five, ten, and fifteen minutes.
             const actions = [await ActionBuilder.create({name: 'Bar', duration: 5}), await ActionBuilder.create({name: 'Bay', duration: 10}), await ActionBuilder.create({name: 'Bor', duration: 15})];
             // Run the create method
-            const s = await ScheduleBuilder.create({templateId: 1, name: 'Foo', 
-                                                    actions});
+            const template = await TemplateBuilder.create({name: 'Wabafeto'});
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                await template.link(action);
+            }
+
+            const s = await ScheduleBuilder.create({name: 'Foo', template});
             // Get the current Datetime
             const cdt = Date.now();
             // In the Schedule object
             // expect the first event's start to be within 2 minutes of the current Datetime 
-            expect(s.startTime).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
-            expect(s.events.shift().start.posix).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
+            expect(s.start).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
+            expect(new Date(s.events.shift().start).getTime()).to.be.within(addMins(cdt, -2), addMins(cdt, 2));
             // expect the last event's end to be within 2 minutes of thirty minutes from the current Datetime 
-            expect(s.events.pop().end.posix).to.be.within(addMins(cdt, 30-2), addMins(cdt, 30+2));
+            expect(new Date(s.events.pop().end).getTime()).to.be.within(addMins(cdt, 30-2), addMins(cdt, 30+2));
             
-            // In the db: 
+            // In the db: ).getTime()
             const es = await sqliteInstance.query(`SELECT * FROM schedule_events se INNER JOIN events e ON se.event_id = e.id WHERE se.schedule_id = ${s.id};`);
+            console.log(es);
             // Get the first connected event from the db
             const firstEvent = es.shift().start
             // // expect the first event's start to be within 2 minutes of the current Datetime 

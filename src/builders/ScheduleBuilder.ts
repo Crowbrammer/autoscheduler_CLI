@@ -14,16 +14,9 @@ export default class ScheduleBuilder extends Builder {
             throw new Error('This ScheduleBuilder require a Template object to build a Schedule.');
         }
         const s = new Schedule({template: options.template, setAsCurrent: options.setAsCurrent});
-        await s.buildEvents();
-
         // Add it to the db
-        const queryResult = await Builder.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${s.name}' , '${s.template.id}', ${options.setAsCurrent ? true : false});`);
-        s.id = Builder.getInsertId(queryResult);
-
+        await s.save(true);
+        await s.buildEvents();
         return s
     }
-}
-
-function clog(message) {
-    console.log(message);
 }

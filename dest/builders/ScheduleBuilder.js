@@ -13,14 +13,10 @@ class ScheduleBuilder extends Builder_1.default {
             throw new Error('This ScheduleBuilder require a Template object to build a Schedule.');
         }
         const s = new Schedule_1.default({ template: options.template, setAsCurrent: options.setAsCurrent });
-        await s.buildEvents();
         // Add it to the db
-        const queryResult = await Builder_1.default.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${s.name}' , '${s.template.id}', ${options.setAsCurrent ? true : false});`);
-        s.id = Builder_1.default.getInsertId(queryResult);
+        await s.save(true);
+        await s.buildEvents();
         return s;
     }
 }
 exports.default = ScheduleBuilder;
-function clog(message) {
-    console.log(message);
-}

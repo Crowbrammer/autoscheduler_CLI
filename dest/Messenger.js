@@ -181,9 +181,9 @@ exports.ReorderActionsMessenger = ReorderActionsMessenger;
 class CreateScheduleMessenger extends ScheduleMessenger {
     async message() {
         // this.schedule = await BaseMessenger.autoscheduler.create.schedule();
-        const t = new Template_1.default();
-        await t.getCurrentTemplate();
-        this.schedule = await ScheduleBuilder_1.default.create({ templateId: t.id, name: t.name, setAsCurrent: true });
+        const template = new Template_1.default();
+        await template.getCurrentTemplate();
+        this.schedule = await ScheduleBuilder_1.default.create({ template, setAsCurrent: true });
         console.log(this.schedule);
         return this.msg = this.formalitize(this.buildScheduleMessage());
     }
