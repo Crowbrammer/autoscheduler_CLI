@@ -23,7 +23,7 @@ export class CreateTablesMigration {
         if (loud) console.log(`Migrating for decisions`);
         await this.driver.query(`CREATE TABLE decisions (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud) console.log(`Migrating for schedules`);
-        await this.driver.query(`CREATE TABLE schedules (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), based_on_template_id INTEGER, is_current BOOLEAN, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
+        await this.driver.query(`CREATE TABLE schedules (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, name VARCHAR(255), based_on_template_id INTEGER, is_current BOOLEAN DEFAULT(false), date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud) console.log(`Migrating for events`);
         await this.driver.query(`CREATE TABLE events (id INTEGER PRIMARY KEY ${this.type === 'MySQL' ? 'AUTO_INCREMENT' : 'AUTOINCREMENT'}, summary VARCHAR(255), start DATETIME, end DATETIME, base_action_id INTEGER, date_created DATETIME DEFAULT (DATETIME('now')), date_last_used DATETIME DEFAULT (DATETIME('now')) );`);
         if (loud) console.log(`Migrating for schedule_template_actions`);

@@ -242,9 +242,22 @@ describe('Builders build', async function() {
             expect(s.events.every(e => e.constructor.name === 'Event')).to.be.true;
         })
 
+        // After: I run the builder
+        // Then: 
+        it('adds a schedule entry in the db', async function() {
+            // Check the db for the num of entries
+            const numScheduleEntriesBefore = (await sqliteInstance.query('SELECT COUNT(*) ct FROM schedules'))[0].ct;
+            // Add the schedule
+            const template = await TemplateBuilder.create({name: 'Wabafeto'});
+            await ScheduleBuilder.create({name: 'Foo', template});
+            // Check the db for the num of entries. Did it increase by one?
+            const numScheduleEntriesAfter = (await sqliteInstance.query('SELECT COUNT(*) ct FROM schedules'))[0].ct;
+            expect(numScheduleEntriesAfter).to.equal(numScheduleEntriesBefore + 1);
+        });
+
         // After: I run the create method
         // Then:
-        xit('Has events with accurate datetimes', async function () {
+        it('Has events with accurate datetimes', async function () {
             // Create three actions of durations, five, ten, and fifteen minutes.
             const actions = [await ActionBuilder.create({name: 'Bar', duration: 5}), await ActionBuilder.create({name: 'Bay', duration: 10}), await ActionBuilder.create({name: 'Bor', duration: 15})];
             // Run the create method

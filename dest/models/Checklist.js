@@ -35,7 +35,7 @@ class Checklist extends Model_1.AutoschedulerModel {
         }
     }
     async getActions() {
-        return await this.driver.query(`SELECT * FROM checklist_actions INNER JOIN actions WHERE checklist_id = ${this.id} ORDER BY order_num`);
+        return await this.driver.query(`SELECT * FROM checklist_actions ca INNER JOIN actions a ON ca.action_id = a.id WHERE checklist_id = ${this.id} ORDER BY order_num`);
     }
     async getCurrentChecklist() {
         const currentCls = await this.driver.query(`SELECT * FROM checklists WHERE is_current = true;`);

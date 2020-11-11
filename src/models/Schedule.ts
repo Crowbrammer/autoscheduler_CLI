@@ -126,7 +126,7 @@ export default class Schedule extends AutoschedulerModel{
 
     async exists() {
 
-      return (await this.driver.query(`SELECT id FROM schedules WHERE id = ${this.id}`)).length === 0;
+      return (await this.driver.query(`SELECT id FROM schedules WHERE id = ${this.id}`)).length > 0;
 
     }
 
@@ -136,7 +136,7 @@ export default class Schedule extends AutoschedulerModel{
           throw new Error('This method requires an id to use.');
       
       if ( !( await this.exists() ) ) 
-          throw new Error('This checklist\'s id doesn\'t exist in the schedules table.');
+          throw new Error('This schedule\'s id doesn\'t exist in the schedules table.');
 
       await this.driver.query('UPDATE schedules SET is_current = false');
       return await this.driver.query(`UPDATE schedules SET is_current = true WHERE id = ${this.id}`);

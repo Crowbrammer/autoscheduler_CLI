@@ -101,13 +101,13 @@ class Schedule extends Model_1.AutoschedulerModel {
         return currentSchedules[0].id === this.id;
     }
     async exists() {
-        return (await this.driver.query(`SELECT id FROM schedules WHERE id = ${this.id}`)).length === 0;
+        return (await this.driver.query(`SELECT id FROM schedules WHERE id = ${this.id}`)).length > 0;
     }
     async markAsCurrent() {
         if (!this.id)
             throw new Error('This method requires an id to use.');
         if (!(await this.exists()))
-            throw new Error('This checklist\'s id doesn\'t exist in the schedules table.');
+            throw new Error('This schedule\'s id doesn\'t exist in the schedules table.');
         await this.driver.query('UPDATE schedules SET is_current = false');
         return await this.driver.query(`UPDATE schedules SET is_current = true WHERE id = ${this.id}`);
     }

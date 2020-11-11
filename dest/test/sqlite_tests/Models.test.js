@@ -170,12 +170,14 @@ describe('Model RUDs and links', async function() {
         // After: new Schedule({id: 3}).hasLinkWith(event) where an entry in the schedule_events table
         // Then:
         it('returns the link or null', async function () {
+            // Create a template for the schedule.
+            const template = await TemplateBuilder.create({name: 'Foo'});
             // Create a schedule and store its id
-            const s = await ScheduleBuilder.create({name: 'Foo', templateId: 1});
-            // Create two events and store its id
+            const s = await ScheduleBuilder.create({name: 'Foo', template});
+            // Create two actions and events using these actions and store its id
+            const as = [await ActionBuilder.create({name: 'Bloop', duration: 60}), await ActionBuilder.create({name: 'Blop', duration: 420})];
             const start = '2020-11-09 15:15:15';
-            const end   = '2020-11-09 23:15:15';
-            const es = [await EventBuilder.create({summary: 'Bar', start, end}), await EventBuilder.create({summary: 'Bar', start, end})];
+            const es = [await EventBuilder.create({action: as[0], start}), await EventBuilder.create({action: as[1], start})];
             // Create a linking entry between the CL and one event
             await sqliteInstance.query(`INSERT INTO schedule_events (schedule_id, event_id) VALUES (${s.id}, ${es[0].id})`);
             // null if not
@@ -190,13 +192,18 @@ describe('Model RUDs and links', async function() {
         // After: new Schedule({id: 3}).link;
         // Then: 
         it('It connects the schedule to the event', async function () {
-            // Create a schedule and store its id
-            const s = await ScheduleBuilder.create({templateId: 1, name: 'Foo'});
+            // Create a schedule
+            const template = await TemplateBuilder.create({name: 'Wabefeto'});
+            const s = await ScheduleBuilder.create({template});
             // Create a few events
+            const actions = [];
+            actions.push(await ActionBuilder.create({name: 'Bar', duration: 69}));
+            actions.push(await ActionBuilder.create({name: 'Bar', duration: 420}));
+            actions.push(await ActionBuilder.create({name: 'Bar', duration: 1}));
             const events = [];
-            events.push(await EventBuilder.create({summary: 'Bar', duration: 69}));
-            events.push(await EventBuilder.create({summary: 'Bar', duration: 420}));
-            events.push(await EventBuilder.create({summary: 'Bar', duration: 1}));
+            events.push(await EventBuilder.create({action: actions[0], start: new Date()}));
+            events.push(await EventBuilder.create({action: actions[1], start: new Date()}));
+            events.push(await EventBuilder.create({action: actions[2], start: new Date()}));
     
             // Run the linking functions
             for (let i = 0; i < events.length; i++) {
@@ -214,15 +221,24 @@ describe('Model RUDs and links', async function() {
         // Then:
         it('Pulls events related to the schedule', async function () {
             // Create a schedule
-            const s = await ScheduleBuilder.create({templateId: 1, name: 'Foo'});
+            const template = await TemplateBuilder.create({name: 'Wabefeto'});
+            const s = await ScheduleBuilder.create({template});
             // Create a few events
-            const start = '2020-11-09 15:15:15';
-            const end   = '2020-11-09 23:15:15';
-            const es = [await EventBuilder.create({summary: 'Bar', start, end}), await EventBuilder.create({summary: 'Bor', start, end}), await EventBuilder.create({summary: 'Bay', start, end})];
-            // Link 'em
-            for (let i = 0; i < es.length; i++) {
-                const event = es[i];
-                await s.link(event);
+            const actions = [];
+            actions.push(await ActionBuilder.create({name: 'Bar', duration: 69}));
+            actions.push(await ActionBuilder.create({name: 'Bay', duration: 420}));
+            actions.push(await ActionBuilder.create({name: 'Bor', duration: 1}));
+            const events = [];
+            events.push(await EventBuilder.create({action: actions[0], start: new Date()}));
+            events.push(await EventBuilder.create({action: actions[1], start: new Date()}));
+            events.push(await EventBuilder.create({action: actions[2], start: new Date()}));
+    
+            // Run the linking functions
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                await s.link(event); // Pass an object because it can link to different things: Events, outcomes, schedules(?).
+                // Check that they're linked
+                const link = await s.hasLinkWith(event);
             }
             // Use the function
             const attemptedClEventPull = await s.getEvents();
@@ -235,9 +251,10 @@ describe('Model RUDs and links', async function() {
         // Then
         it(`Tells me if it's current or not`, async function () {
             // Create two schedules. Mark one as current.
-            const s0 = await ScheduleBuilder.create({name: 'Whoa', templateId: 1});
+            const template = await TemplateBuilder.create({name: 'Wabefeto'});
+            const s0 = await ScheduleBuilder.create({template});
             await s0.markAsCurrent();
-            const s = await ScheduleBuilder.create({name: 'Whoa', templateId: 1});
+            const s = await ScheduleBuilder.create({template});
             // Run the function. Expect one to be true, the other false.
             expect(await s0.isCurrent()).to.be.true;
             expect(await s.isCurrent()).to.be.false;
@@ -245,10 +262,11 @@ describe('Model RUDs and links', async function() {
 
         // After: new Schedule({id: 3}).markAsCurrent();
         // Then:
-        xit('Makes the schedule the current one', async function () {
+        it('Makes the schedule the current one', async function () {
             // Create two schedules, mn (mnemonic -> remember it -> store it in a variable)
-            const s0 = await ScheduleBuilder.create({name: 'Foo Fighter'});
-            const s = await ScheduleBuilder.create({name: 'Foo'});
+            const template = await TemplateBuilder.create({name: 'Wabefeto'});
+            const s0 = await ScheduleBuilder.create({template});
+            const s = await ScheduleBuilder.create({template});
             // Make one of the schedules current with a query.
             await sqliteInstance.query(`UPDATE schedules SET is_current = true WHERE id = ${s0.id};`);
             // Invoke markAsCurrent()
@@ -256,7 +274,8 @@ describe('Model RUDs and links', async function() {
             // Pull the current schedules, mn
             const pulledCls = await sqliteInstance.query(`SELECT id FROM schedules WHERE is_current = true;`);
             // Expect s0 to be not current
-            expect((await sqliteInstance.query(''))) // Check if something is current or not...
+            const s0Query = await sqliteInstance.query(`SELECT is_current FROM schedules WHERE id = ${s0.id};`);
+            expect(s0Query[0].is_current).to.equal(0); // Check if something is current or not...
             // Expect the pull to be an array of length 1
             expect(pulledCls.length).to.equal(1);
             // Expect the entry in that array to have the same id as the schedule
@@ -267,11 +286,12 @@ describe('Model RUDs and links', async function() {
         // Then:
         it('Sets the id and name of the current Schedule object to match the current schedule', async function () {
             // Create a schedule, mn
-            const s = await ScheduleBuilder.create({templateId: 1, name: 'Foo'});
+            const template = await TemplateBuilder.create({name: 'Wabefeto'});
+            const s = await ScheduleBuilder.create({template});
             // Mark it as current
             await s.markAsCurrent();
             // Without the builder, create a Schedule object
-            const freshSchedule = new Schedule({templateId: 1});
+            const freshSchedule = new Schedule({template});
             // Invoke getCurrentSchedule
             await freshSchedule.getCurrentSchedule();
             // Check that its id and name matches the current S's id and name

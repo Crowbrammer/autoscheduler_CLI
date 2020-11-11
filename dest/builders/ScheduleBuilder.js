@@ -14,7 +14,10 @@ class ScheduleBuilder extends Builder_1.default {
         }
         const s = new Schedule_1.default({ template: options.template, setAsCurrent: options.setAsCurrent });
         await s.buildEvents();
-        return await s;
+        // Add it to the db
+        const queryResult = await Builder_1.default.driver.query(`INSERT INTO schedules (name, based_on_template_id, is_current) VALUES ('${s.name}' , '${s.template.id}', ${options.setAsCurrent ? true : false});`);
+        s.id = Builder_1.default.getInsertId(queryResult);
+        return s;
     }
 }
 exports.default = ScheduleBuilder;
