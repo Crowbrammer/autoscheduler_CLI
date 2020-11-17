@@ -16,21 +16,20 @@ class ActionController {
                     throw new Error('Require a starting position for repeating.');
                 if (/\D+/.test(data[2]))
                     throw new Error('Require an ending position for repeating.');
-                if (/\D+/.test(data[3]))
-                    throw new Error('Please specify how many times you want to repeat it.');
+                const numRepeats = data[3] || 1;
                 // Find the actions of the current template
                 const templateActions = await t.getActions();
                 // Select the actions from the given positions
                 const selectedActions = templateActions.slice(data[1] - 1, data[2]);
                 // // Add duplicates of these actions the given number of times
-                for (let i = 0; i < data[3]; i++) {
+                for (let i = 0; i < numRepeats; i++) {
                     for (let i = 0; i < selectedActions.length; i++) {
                         let action = selectedActions[i];
                         action = await ActionBuilder_1.default.create(action);
                         await t.link(action);
                     }
                 }
-                return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more ${data[3] == 1 ? 'time' : 'times'}.`;
+                return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${numRepeats} more ${numRepeats == 1 ? 'time' : 'times'}.`;
             }
             else if (/time/.test(data[2])) {
                 // Parse the digits from it

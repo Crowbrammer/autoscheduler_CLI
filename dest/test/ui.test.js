@@ -160,4 +160,24 @@ describe('UI', async function() {
         expect(/Bar[\s\S.]*Zoo[\s\S.]*Bar[\s\S.]*Bar/.test(atPos)).to.be.true;
 
     });
+
+    // After: Creating two actions, then ca --r 1 2
+    // Then:
+    it('Repeats it once if undefined', async function() {
+        
+        await system(`${a} ct Foo`).catch(err => console.error(err));
+        await system(`${a} ca Bar 15`).catch(err => console.error(err));
+        await system(`${a} ca Buzz 30`).catch(err => console.error(err));
+        // Create two actions
+        // Run the repeat command
+        let output = await system(`${a} ca -r 1 2`).catch(err => console.error(err));
+        expect(output).to.equal('Actions from positions 1 to 2, inclusive, repeated 1 more time.');
+        // Create the schedule
+        output = await system(`${a} cs`).catch(err => console.error(err));
+        // There should nine times and eight actions
+        expect(output.match(/\d\d:\d\d/g).length).to.equal(5);
+        expect(output.match(/Bar/g).length).to.equal(2);
+        expect(output.match(/Buzz/g).length).to.equal(2);
+    });
+
 });
