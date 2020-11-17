@@ -21,21 +21,6 @@ describe('Focuser', async function() {
         
     });
 
-    // After: f co
-    // Then
-    xit('Sets an outcome, db', async function () {
-        // Check the table
-        const outcomeCt = (await driver.query('SELECT COUNT(*) ct FROM outcomes;'))[0].ct;
-        // Run it
-        const output = await system(`node ${__dirname}/../index.js co Whoop`).catch(err => console.error(err));
-        // Check for the message
-        expect(output).to.contain('Whoop');
-        // Check the db
-        const outcomeAfterCt = (await driver.query('SELECT COUNT(*) ct FROM outcomes;'))[0].ct;
-        expect(outcomeAfterCt).to.equal(outcomeCt + 1);
-
-    })
-
     // After: Creating two actions, then ca --repeat 1 2 3
     // Then:
     it('Repeats the two actions three times', async function() {
@@ -81,4 +66,17 @@ describe('Focuser', async function() {
         expect(output).to.contain('15');
         expect(output).to.contain('30');
     })
+    
+    // After: ca <name> <duration> --times=#
+    // Then:
+    it('Adds as many copies of the actions as I specify ', async function() {
+        // Create a template
+        await system(`${a} ct Foo`).catch(err => console.error(err));
+        // Create the action with the command
+        await system(`${a} ca Bar 15 --times=3`).catch(err => console.error(err));
+        // Retrieve the template
+        const template = await system(`${a} rt`).catch(err => console.error(err));
+        // Expect the action to show up many times
+        expect(template.match(/Bar/g).length).to.equal(3);
+    });
 });

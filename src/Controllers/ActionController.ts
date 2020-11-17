@@ -10,12 +10,12 @@ export default class ActionController implements Controller {
 
         // If repeating
         if (data[0] === '--repeat') {
-            // if (/\D+/.test(data[1]))
-            //     throw new Error('Require a starting position for repeating.');
-            // if (/\D+/.test(data[2]))
-            //     throw new Error('Require an ending position for repeating.');
-            // if (/\D+/.test(data[3]))
-            //     throw new Error('Please specify how many times you want to repeat it.');
+            if (/\D+/.test(data[1]))
+                throw new Error('Require a starting position for repeating.');
+            if (/\D+/.test(data[2]))
+                throw new Error('Require an ending position for repeating.');
+            if (/\D+/.test(data[3]))
+                throw new Error('Please specify how many times you want to repeat it.');
 
             // Find the actions of the current template
             const templateActions = await t.getActions();
@@ -31,7 +31,20 @@ export default class ActionController implements Controller {
             }
             
             return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated 3 more times.`
-        }
+        } else if (/--times/.test(data[2])) {
+            // Parse the digits from it
+            const digits = data[2].slice(8);
+            // Expect the digits to actually be digits
+            if (/\D/.test(digits))
+                throw new Error('Only use digits for the --times flag');
+            
+            for (let i = 0; i < digits; i++) {
+                // Add the actions for as many times as the times says, linking each
+                const action = await ActionBuilder.create({name: data[0], duration: data[1]});
+                await t.link(action);
+            }
+            return `Created ${digits} ${digits == 1 ? 'copy' : 'copies'} of the action, '${data[0]}', of duration ${data[1]} minutes.`;
+        } 
             
         // Make an action, mn
         const action = await ActionBuilder.create({name: data[0], duration: data[1]});
