@@ -30,12 +30,12 @@ class ActionController {
             }
             return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more ${data[3] == 1 ? 'time' : 'times'}.`;
         }
-        else if (/--times/.test(data[2])) {
+        else if (/time/.test(data[2])) {
             // Parse the digits from it
-            const digits = data[2].slice(8);
+            const digits = /\d+/.exec(data[2]);
             // Expect the digits to actually be digits
-            if (/\D/.test(digits))
-                throw new Error('Only use digits for the --times flag');
+            // if (/\D/.test(digits))
+            //     throw new Error('Only use digits for the --times flag');
             for (let i = 0; i < digits; i++) {
                 // Add the actions for as many times as the times says, linking each
                 const action = await ActionBuilder_1.default.create({ name: data[0], duration: data[1] });

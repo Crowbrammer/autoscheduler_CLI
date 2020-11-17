@@ -140,7 +140,6 @@ describe('UI', async function() {
         await system(`${a} cs`).catch(err => console.error(err));
         // Update at 2
         const update = await system(`${a} us 2`).catch(err => console.error(err));
-        console.log(update);
         const newSchedule = await system(`${a} rs`).catch(err => console.error(err));
         // Only 2 and 3 should be in the schedule
         expect(newSchedule.match(/\d\d:\d\d/g).length).to.equal(3);
