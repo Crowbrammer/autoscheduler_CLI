@@ -29,6 +29,13 @@ export default class Action extends AutoschedulerModel {
         return this;
     };
 
+    static async delete(id: number) {
+        // Just remove it at a given id
+        await this.driver.query(`DELETE FROM schedule_template_actions WHERE action_id = ${id}`);
+        await this.driver.query(`DELETE FROM actions WHERE id = ${id}`);
+        return `Action of id, ${id}, deleted.`;
+    }
+
     async link(templateId: number) {
         if (!this.id) throw new Error('Cannot link without an id'); 
         const numStas = (await this.driver.query(`SELECT schedule_template_id FROM schedule_template_actions WHERE schedule_template_id = ${templateId}`)).length;

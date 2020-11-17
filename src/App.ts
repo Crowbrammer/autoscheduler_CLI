@@ -31,6 +31,10 @@ export default class AutoschedulerApp {
                 this.out = await this.controller.retrieve(this.data);
                 break;
 
+            case 'd':
+                this.out = await this.controller.delete(this.data);
+                break;
+
             default:
                 break;
         }

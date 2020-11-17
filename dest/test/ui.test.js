@@ -79,4 +79,21 @@ describe('Focuser', async function() {
         // Expect the action to show up many times
         expect(template.match(/Bar/g).length).to.equal(3);
     });
+    
+    // After: rm <pos>
+    // Then:
+    it('Deletes an action at a given position (temp)', async function() {
+        // Create a template
+        await system(`${a} ct Foo`).catch(err => console.error(err));
+        // Create the action with the command
+        await system(`${a} ca Bar 15 --times=3`).catch(err => console.error(err));
+        // Prove this was done
+        let template = await system(`${a} rt`).catch(err => console.error(err));
+        expect(template.match(/Bar/g).length).to.equal(3);
+        // Delete the action
+        await system(`${a} da 3`).catch(err => console.error(err));
+        // Assert that the template is empty
+        template = await system(`${a} rt`).catch(err => console.error(err));
+        expect(template.match(/Bar/g).length).to.equal(2);
+    });
 });

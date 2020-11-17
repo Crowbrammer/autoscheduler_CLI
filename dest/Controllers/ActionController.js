@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ActionBuilder_1 = require("../builders/ActionBuilder");
 const Template_1 = require("../models/Template");
+const Action_1 = require("../models/Action");
 class ActionController {
     async create(data) {
         // Get the current template.
@@ -53,7 +54,17 @@ class ActionController {
     ;
     async update() { }
     ;
-    async delete() { }
+    async delete(data) {
+        // Get the current template
+        const t = new Template_1.default();
+        await t.getCurrentTemplate();
+        // Get the actions of the current template
+        const actions = await t.getActions();
+        // Get the id of the action at order num data[0]
+        const atOrderNum = actions[data[0] - 1];
+        // Delete it
+        return await Action_1.default.delete(atOrderNum.id);
+    }
     ;
 }
 exports.default = ActionController;

@@ -27,6 +27,12 @@ class Action extends Model_1.AutoschedulerModel {
         return this;
     }
     ;
+    static async delete(id) {
+        // Just remove it at a given id
+        await this.driver.query(`DELETE FROM schedule_template_actions WHERE action_id = ${id}`);
+        await this.driver.query(`DELETE FROM actions WHERE id = ${id}`);
+        return `Action of id, ${id}, deleted.`;
+    }
     async link(templateId) {
         if (!this.id)
             throw new Error('Cannot link without an id');

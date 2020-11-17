@@ -1,6 +1,7 @@
 import Controller from './Controller';
 import ActionBuilder from '../builders/ActionBuilder';
 import Template from '../models/Template';
+import Action from '../models/Action';
 
 export default class ActionController implements Controller {
     async create(data: any) {
@@ -54,5 +55,15 @@ export default class ActionController implements Controller {
     };
     async retrieve() {};
     async update() {};
-    async delete() {};      
+    async delete(data: any) {
+        // Get the current template
+        const t = new Template();
+        await t.getCurrentTemplate();
+        // Get the actions of the current template
+        const actions = await t.getActions();
+        // Get the id of the action at order num data[0]
+        const atOrderNum = actions[data[0] - 1];
+        // Delete it
+        return await Action.delete(atOrderNum.id);
+    };      
 }
