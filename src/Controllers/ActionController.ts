@@ -10,7 +10,7 @@ export default class ActionController implements Controller {
         await t.getCurrentTemplate();
 
         // If repeating
-        if (data[0] === '--repeat' || data[0] === '-r') {
+        if (/r/.test(data[0])) {
             if (/\D+/.test(data[1]))
                 throw new Error('Require a starting position for repeating.');
             if (/\D+/.test(data[2]))
