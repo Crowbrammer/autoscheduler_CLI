@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ActionController_1 = require("./Controllers/ActionController");
 const TemplateController_1 = require("./Controllers/TemplateController");
 const ScheduleController_1 = require("./Controllers/ScheduleController");
+const EventController_1 = require("./Controllers/EventController");
 class AutoschedulerApp {
     in(verbAndController) {
         // The second letter should rep the controller.
@@ -26,6 +27,9 @@ class AutoschedulerApp {
             case 'd':
                 this.out = await this.controller.delete(this.data);
                 break;
+            case 'u':
+                this.out = await this.controller.update(this.data);
+                break;
             default:
                 break;
         }
@@ -40,6 +44,9 @@ class AutoschedulerApp {
                 break;
             case 's':
                 this.controller = new ScheduleController_1.default();
+                break;
+            case 'e':
+                this.controller = new EventController_1.default();
                 break;
             default:
                 break;

@@ -14,7 +14,7 @@ class Schedule extends Model_1.AutoschedulerModel {
             return;
         this.template = options.template;
         this.start = Date.now() || options.start;
-        this.name = options.template.name;
+        this.name = this.template ? options.template.name : '';
     }
     // This should be on the ScheduleBuilder...
     async buildEvents() {

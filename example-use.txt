@@ -1,10 +1,31 @@
+
 < a ct 'name'
 > Template 'name' created and current.
 
 < a ca ss 40
 > Action 'ss' for 40 minutes created at pos 1
 
-< a ca D# 15
+< a ca D3 15
+> Action 'D3' for 15 minutes created at pos 2
+
+< a cs
+> (ss 40, D3 15)
+
+< a re
+> The current event is:
+
+##:##
+  1. ss 
+##:## (XX minutes left)
+
+
+< a ct 'name'
+> Template 'name' created and current.
+
+< a ca ss 40
+> Action 'ss' for 40 minutes created at pos 1
+
+< a ca D3 15
 > Action 'D3' for 15 minutes created at pos 2
 
 < a ca --repeat 1 2 10

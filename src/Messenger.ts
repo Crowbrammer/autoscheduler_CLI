@@ -208,7 +208,7 @@ export class CreateScheduleMessenger extends ScheduleMessenger {
         // this.schedule = await BaseMessenger.autoscheduler.create.schedule();
         const template = new Template();
         await template.getCurrentTemplate();
-        this.schedule = await ScheduleBuilder.create({template, setAsCurrent: true});
+        this.schedule = await ScheduleBuilder.create({template, markAsCurrent: true});
         console.log(this.schedule);
         return this.msg = this.formalitize(this.buildScheduleMessage());
     }

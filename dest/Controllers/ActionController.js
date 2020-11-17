@@ -9,7 +9,7 @@ class ActionController {
         const t = new Template_1.default();
         await t.getCurrentTemplate();
         // If repeating
-        if (data[0] === '--repeat') {
+        if (data[0] === '--repeat' || data[0] === '-r') {
             if (/\D+/.test(data[1]))
                 throw new Error('Require a starting position for repeating.');
             if (/\D+/.test(data[2]))
@@ -28,7 +28,7 @@ class ActionController {
                     await t.link(action);
                 }
             }
-            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more times.`;
+            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more ${data[3] == 1 ? 'time' : 'times'}.`;
         }
         else if (/--times/.test(data[2])) {
             // Parse the digits from it

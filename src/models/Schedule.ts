@@ -22,7 +22,7 @@ export default class Schedule extends AutoschedulerModel{
         return;
       this.template = options.template;
       this.start = Date.now() || options.start;
-      this.name = options.template.name; 
+      this.name = this.template ? options.template.name : ''; 
     }
     
     // This should be on the ScheduleBuilder...

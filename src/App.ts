@@ -1,6 +1,7 @@
 import ActionController   from './Controllers/ActionController';
 import TemplateController from './Controllers/TemplateController';
 import ScheduleController from './Controllers/ScheduleController';
+import EventController    from './Controllers/EventController';
 
 export default class AutoschedulerApp {
     controller;
@@ -35,6 +36,10 @@ export default class AutoschedulerApp {
                 this.out = await this.controller.delete(this.data);
                 break;
 
+            case 'u':
+                this.out = await this.controller.update(this.data);
+                break;
+
             default:
                 break;
         }
@@ -52,6 +57,10 @@ export default class AutoschedulerApp {
 
             case 's':
                 this.controller = new ScheduleController();
+                break;
+
+            case 'e':
+                this.controller = new EventController();
                 break;
 
             default:
