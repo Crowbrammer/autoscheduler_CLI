@@ -28,7 +28,7 @@ class ActionController {
                     await t.link(action);
                 }
             }
-            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated 3 more times.`;
+            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more times.`;
         }
         else if (/--times/.test(data[2])) {
             // Parse the digits from it

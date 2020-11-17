@@ -31,7 +31,7 @@ export default class ActionController implements Controller {
                 }
             }
             
-            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated 3 more times.`
+            return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more times.`
         } else if (/--times/.test(data[2])) {
             // Parse the digits from it
             const digits = data[2].slice(8);
