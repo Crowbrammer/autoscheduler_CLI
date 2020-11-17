@@ -2,15 +2,18 @@ import Controller from './Controller';
 import ActionBuilder from '../builders/ActionBuilder';
 import Template from '../models/Template';
 import Action from '../models/Action';
+import Builder from '../builders/Builder';
 
 export default class ActionController implements Controller {
     async create(data: any) {
+        try {
+            
         // Get the current template.
         const t = new Template();
         await t.getCurrentTemplate();
 
         // If repeating
-        if (/r/.test(data[0])) {
+        if (/-r/.test(data[0])) {
             if (/\D+/.test(data[1]))
                 throw new Error('Require a starting position for repeating.');
             if (/\D+/.test(data[2]))
@@ -34,24 +37,42 @@ export default class ActionController implements Controller {
             return `Actions from positions ${data[1]} to ${data[2]}, inclusive, repeated ${data[3]} more ${data[3] == 1 ? 'time' : 'times'}.`
         } else if (/time/.test(data[2])) {
             // Parse the digits from it
-            const digits = /\d+/.exec(data[2]);
-            // Expect the digits to actually be digits
-            // if (/\D/.test(digits))
-            //     throw new Error('Only use digits for the --times flag');
+            const digits = Number(/\d+/.exec(data[2])[0]);
             
             for (let i = 0; i < digits; i++) {
                 // Add the actions for as many times as the times says, linking each
                 const action = await ActionBuilder.create({name: data[0], duration: data[1]});
                 await t.link(action);
             }
-            return `Created ${digits} ${digits == 1 ? 'copy' : 'copies'} of the action, '${data[0]}', of duration ${data[1]} minutes.`;
-        } 
+            return `Created ${digits} ${digits === 1 ? 'copy' : 'copies'} of the action, '${data[0]}', of duration ${data[1]} minutes.`;
+        } else if (/\d/.test(data[2])) {
+            // const action = await ActionBuilder.create({name: data[0], duration: data[1]});
+            // Get all the current actions in order
+            const currentActions = await t.getActions();
+            // Put the action at pos - 1 in currentActions.
+            // To avoid messy query... make sure the action's in there...
+            const action = await ActionBuilder.create({name: data[0], duration: data[1]});
+            await t.link(action);
+            currentActions.splice(data[2] - 1, 0, action);
+            // Iterate through the link and increment all actions at order - 1 to have an order_num of + 1.
+            for (let i = 0; i < currentActions.length; i++) {
+                const action = currentActions[i];
+                // Set the link's order_num to match its position + 1
+                await Builder.driver.query(`UPDATE schedule_template_actions SET order_num = ${i + 1} WHERE schedule_template_id = ${t.id} AND action_id = ${action.id}`);
+            }
+            // Save all the actions...
+            return `Created action, ${action.name}, of duration ${action.duration} minutes at position ${data[2]}.`;
+        }
             
         // Make an action, mn
         const action = await ActionBuilder.create({name: data[0], duration: data[1]});
         // Link it to the current template.
         await t.link(action);
         return `Created action, ${action.name}, of duration ${action.duration} minutes.`;
+    
+        } catch (error) {
+            console.log(error.message);
+        }
     };
     async retrieve() {};
     async update() {};

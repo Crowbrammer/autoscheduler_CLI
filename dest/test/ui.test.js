@@ -25,7 +25,8 @@ describe('UI', async function() {
     it('Repeats the two actions three times', async function() {
         
         await system(`${a} ct Foo`).catch(err => console.error(err));
-        await system(`${a} ca Bar 15`).catch(err => console.error(err));
+        const whoop = await system(`${a} ca Bar 15`).catch(err => console.error(err));
+        console.log(whoop);
         await system(`${a} ca Buzz 30`).catch(err => console.error(err));
         // Create two actions
         // Run the repeat command
@@ -144,6 +145,19 @@ describe('UI', async function() {
         // Only 2 and 3 should be in the schedule
         expect(newSchedule.match(/\d\d:\d\d/g).length).to.equal(3);
         expect(newSchedule.match(/Bar/g).length).to.equal(2);
+    });
+
+    // After: ca <name> <duration> <position> 
+    // Then: 
+    it('Creates an action at a specific condition', async function() {
+        // T, A x3, S
+        await system(`${a} ct Foo`).catch(err => console.error(err));
+        await system(`${a} ca Bar 15 --times=3`).catch(err => console.error(err));
+        // Create action at the pos
+        await system(`${a} ca Zoo 20 2`).catch(err => console.error(err));
+        const atPos = await system(`${a} cs`).catch(err => console.error(err));
+        // Bar, Zoo, Bar, Bar
+        expect(/Bar[\s\S.]*Zoo[\s\S.]*Bar[\s\S.]*Bar/.test(atPos)).to.be.true;
 
     });
 });
