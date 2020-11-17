@@ -14,7 +14,7 @@ class ScheduleBuilder extends Builder_1.default {
         }
         const s = new Schedule_1.default({ template: options.template, setAsCurrent: options.setAsCurrent });
         // Add it to the db
-        await s.save(true);
+        await s.save(options.setAsCurrent ? true : false);
         await s.buildEvents();
         return s;
     }

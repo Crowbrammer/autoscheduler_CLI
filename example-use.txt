@@ -1,3 +1,26 @@
+< a ct 'name'
+> Template 'name' created and current.
+
+< a ca ss 40
+> Action 'ss' for 40 minutes created at pos 1
+
+< a ca D# 15
+> Action 'D3' for 15 minutes created at pos 2
+
+< a ca --repeat 1 2 10
+> Repeating actions 1 through 2, inclusive, ten times
+
+< a cs
+> (ss -> D3) x 11
+
+
+
+
+
+
+
+
+
 << a cl 'name'
 >> Checklist named "name" set as current.
 

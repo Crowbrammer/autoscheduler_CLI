@@ -40,7 +40,7 @@ async function main() {
     // App
     const app = new App_1.default();
     // Put the process arguments in
-    app.in(process.argv[2], process.argv[3], process.argv[4], process.argv[5]);
+    app.in(process.argv[2], process.argv[3], process.argv[4], process.argv[5], process.argv[6]);
     // Run it
     await app.run();
     // Print the output

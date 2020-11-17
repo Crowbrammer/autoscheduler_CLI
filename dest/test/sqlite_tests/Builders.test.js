@@ -279,7 +279,6 @@ describe('Builders build', async function() {
             
             // In the db: ).getTime()
             const es = await sqliteInstance.query(`SELECT * FROM schedule_events se INNER JOIN events e ON se.event_id = e.id WHERE se.schedule_id = ${s.id};`);
-            console.log(es);
             // Get the first connected event from the db
             const firstEvent = es.shift().start
             // // expect the first event's start to be within 2 minutes of the current Datetime 
